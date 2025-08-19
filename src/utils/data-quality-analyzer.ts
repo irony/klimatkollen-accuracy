@@ -9,6 +9,13 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { type: 'missing_year', description: 'Saknar år', color: '#eea0b7' }, // pink-2
   { type: 'missing_revenue', description: 'Saknar omsättning', color: '#fdb768' }, // orange-2
   { type: 'revenue_close', description: 'Omsättning nästan rätt', color: '#d5fd63' }, // green-2
+  { type: 'missing_scope1', description: 'Saknar Scope 1 data', color: '#f0759a' }, // pink-3 variant
+  { type: 'missing_scope2', description: 'Saknar Scope 2 data', color: '#f48f2a' }, // orange-3 variant
+  { type: 'missing_scope3', description: 'Saknar Scope 3 data', color: '#aae506' }, // green-3 variant
+  { type: 'year_mismatch', description: 'Fel rapportår', color: '#97455d' }, // pink-4
+  { type: 'name_mismatch', description: 'Företagsnamn skiljer sig', color: '#6c9105' }, // green-4
+  { type: 'id_mismatch', description: 'ID:n matchar inte', color: '#206288' }, // blue-4
+  { type: 'data_structure_error', description: 'Strukturfel i data', color: '#b25f00' }, // orange-4
   { type: 'other', description: 'Annat fel', color: '#878787' }, // grey
 ];
 
@@ -56,15 +63,17 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   if (stageScope1 === prodScope1) {
     correctFields++;
   } else {
-    if (stageScope1 && prodScope1) {
+    if (stageScope1 === null || stageScope1 === undefined) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope1')!);
+    } else if (prodScope1 === null || prodScope1 === undefined) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
+    } else {
       const ratio = Math.abs(stageScope1 / prodScope1);
       if (ratio > 900 && ratio < 1100) {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
       } else {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_error')!);
       }
-    } else {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_error')!);
     }
   }
 
@@ -72,15 +81,17 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   if (stageScope2 === prodScope2) {
     correctFields++;
   } else {
-    if (stageScope2 && prodScope2) {
+    if (stageScope2 === null || stageScope2 === undefined) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope2')!);
+    } else if (prodScope2 === null || prodScope2 === undefined) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
+    } else {
       const ratio = Math.abs(stageScope2 / prodScope2);
       if (ratio > 900 && ratio < 1100) {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
       } else {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_error')!);
       }
-    } else {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_error')!);
     }
   }
 
@@ -88,15 +99,17 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   if (stageScope3 === prodScope3) {
     correctFields++;
   } else {
-    if (stageScope3 && prodScope3) {
+    if (stageScope3 === null || stageScope3 === undefined) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope3')!);
+    } else if (prodScope3 === null || prodScope3 === undefined) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
+    } else {
       const ratio = Math.abs(stageScope3 / prodScope3);
       if (ratio > 900 && ratio < 1100) {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
       } else {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_error')!);
       }
-    } else {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_error')!);
     }
   }
 
@@ -113,8 +126,10 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   } else {
     if (!stageYear && prodYear) {
       errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_year')!);
+    } else if (stageYear && !prodYear) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
     } else {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'year_mismatch')!);
     }
   }
 
@@ -124,6 +139,8 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   } else {
     if (!stageRevenue && prodRevenue) {
       errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_revenue')!);
+    } else if (stageRevenue && !prodRevenue) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
     } else if (stageRevenue && prodRevenue) {
       const difference = Math.abs(stageRevenue - prodRevenue) / prodRevenue;
       if (difference < 0.1) {
@@ -131,10 +148,16 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       } else if (difference < 0.2) {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_close')!);
       } else {
-        errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
+        // Kolla om det är enhetsproblem (tusental vs miljoner)
+        const revenueRatio = Math.abs(stageRevenue / prodRevenue);
+        if (revenueRatio > 900 && revenueRatio < 1100) {
+          errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+        } else {
+          errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
+        }
       }
     } else {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
     }
   }
 
@@ -142,14 +165,14 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   if (stageCompany.name === prodCompany.name) {
     correctFields++;
   } else {
-    errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'name_mismatch')!);
   }
 
   // Kontrollera wikidataId
   if (stageCompany.wikidataId === prodCompany.wikidataId) {
     correctFields++;
   } else {
-    errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'id_mismatch')!);
   }
 
   const correctnessPercentage = totalFields > 0 ? (correctFields / totalFields) * 100 : 100;

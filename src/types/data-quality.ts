@@ -59,7 +59,9 @@ export interface Company {
 }
 
 export interface ErrorCategory {
-  type: 'scope1_error' | 'scope2_error' | 'scope3_error' | 'currency_error' | 'unit_error' | 'missing_year' | 'missing_revenue' | 'revenue_close' | 'other';
+  type: 'scope1_error' | 'scope2_error' | 'scope3_error' | 'currency_error' | 'unit_error' | 
+        'missing_year' | 'missing_revenue' | 'revenue_close' | 'missing_scope1' | 'missing_scope2' | 
+        'missing_scope3' | 'year_mismatch' | 'name_mismatch' | 'id_mismatch' | 'data_structure_error' | 'other';
   description: string;
   color: string;
 }
