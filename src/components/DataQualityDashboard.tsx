@@ -138,69 +138,38 @@ export default function DataQualityDashboard() {
       </div>
 
       <Tabs defaultValue="histogram" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="histogram">Noggrannhetshistogram</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="histogram">Noggrannhetsanalys</TabsTrigger>
           <TabsTrigger value="errors">Felkategorier</TabsTrigger>
-          <TabsTrigger value="companies">Företagsdetaljer</TabsTrigger>
         </TabsList>
 
         <TabsContent value="histogram">
-          <Card>
-            <CardHeader>
-              <CardTitle>Fördelning av noggrannhet med felkategorier</CardTitle>
-              <CardDescription>
-                Antal företag per noggrannhetsnivå med feltyper stackade (5% intervaller)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={chartConfig} className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={qualityStats.correctnessHistogram}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="range" />
-                    <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    {ERROR_CATEGORIES.map(category => (
-                      <Bar 
-                        key={category.type}
-                        dataKey={category.type} 
-                        stackId="errors"
-                        fill={category.color}
-                        name={category.description}
-                      />
-                    ))}
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="errors">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Felkategorier</CardTitle>
-                <CardDescription>Antal företag per felkategori</CardDescription>
+                <CardTitle>Fördelning av noggrannhet med felkategorier</CardTitle>
+                <CardDescription>
+                  Antal företag per noggrannhetsnivå med feltyper stackade (5% intervaller)
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={chartConfig} className="h-[300px]">
+                <ChartContainer config={chartConfig} className="h-[400px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={errorChartData}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        dataKey="count"
-                        label={({ category, count }) => `${category}: ${count}`}
-                      >
-                        {errorChartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
+                    <BarChart data={qualityStats.correctnessHistogram}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="range" />
+                      <YAxis />
                       <ChartTooltip content={<ChartTooltipContent />} />
-                    </PieChart>
+                      {ERROR_CATEGORIES.map(category => (
+                        <Bar 
+                          key={category.type}
+                          dataKey={category.type} 
+                          stackId="errors"
+                          fill={category.color}
+                          name={category.description}
+                        />
+                      ))}
+                    </BarChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               </CardContent>
@@ -209,6 +178,7 @@ export default function DataQualityDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Felstatistik</CardTitle>
+                <CardDescription>Sammanfattning av alla felkategorier</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {ERROR_CATEGORIES.map(category => (
@@ -230,57 +200,36 @@ export default function DataQualityDashboard() {
           </div>
         </TabsContent>
 
-        <TabsContent value="companies">
+        <TabsContent value="errors">
           <Card>
             <CardHeader>
-              <CardTitle>Företagsdetaljer</CardTitle>
-              <CardDescription>
-                Detaljerad lista över alla företag och deras fel
-              </CardDescription>
+              <CardTitle>Felkategorier</CardTitle>
+              <CardDescription>Antal företag per felkategori</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                {comparisons
-                  .sort((a, b) => a.correctnessPercentage - b.correctnessPercentage)
-                  .map(comparison => (
-                    <div 
-                      key={comparison.companyId} 
-                      className="flex items-center justify-between p-4 border rounded-lg"
+              <ChartContainer config={chartConfig} className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={errorChartData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      dataKey="count"
+                      label={({ category, count }) => `${category}: ${count}`}
                     >
-                      <div className="flex-1">
-                        <h4 className="font-medium">{comparison.companyName}</h4>
-                        <div className="flex gap-2 mt-2 flex-wrap">
-                          {comparison.errors.map((error, index) => (
-                            <Badge 
-                              key={index}
-                              variant="outline"
-                              style={{ 
-                                borderColor: error.color,
-                                color: error.color 
-                              }}
-                            >
-                              {error.description}
-                            </Badge>
-                          ))}
-                          {comparison.errors.length === 0 && (
-                            <Badge variant="outline" className="text-green-600 border-green-600">
-                              Inga fel
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold">
-                          {comparison.correctnessPercentage}%
-                        </div>
-                        <div className="text-sm text-muted-foreground">noggrannhet</div>
-                      </div>
-                    </div>
-                  ))}
-              </div>
+                      {errorChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         </TabsContent>
+
       </Tabs>
     </div>
   );
