@@ -59,6 +59,27 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   const stageYear = stagePeriod ? new Date(stagePeriod.startDate).getFullYear() : undefined;
   const prodYear = prodPeriod ? new Date(prodPeriod.startDate).getFullYear() : undefined;
 
+  // Debug logging för företaget
+  const debugData = {
+    company: stageCompany.name,
+    stage: {
+      scope1: stageScope1,
+      scope2: stageScope2,
+      scope3: stageScope3,
+      currency: stageCurrency,
+      revenue: stageRevenue,
+      year: stageYear
+    },
+    prod: {
+      scope1: prodScope1,
+      scope2: prodScope2,
+      scope3: prodScope3,
+      currency: prodCurrency,
+      revenue: prodRevenue,
+      year: prodYear
+    }
+  };
+
   // Jämför scope 1
   if (stageScope1 === prodScope1) {
     correctFields++;
@@ -153,6 +174,14 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
         if (revenueRatio > 900 && revenueRatio < 1100) {
           errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
         } else {
+          // Detta hamnar i "annat" - logga för analys
+          console.log(`🔍 Revenue "annat" fel för ${stageCompany.name}:`, {
+            stage: stageRevenue,
+            prod: prodRevenue,
+            difference: difference,
+            ratio: revenueRatio,
+            debugData
+          });
           errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
         }
       }
@@ -168,21 +197,31 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     errors.push(ERROR_CATEGORIES.find(e => e.type === 'name_mismatch')!);
   }
 
-  // Kontrollera wikidataId
+  // Kontrollera wikidataId  
   if (stageCompany.wikidataId === prodCompany.wikidataId) {
     correctFields++;
   } else {
     errors.push(ERROR_CATEGORIES.find(e => e.type === 'id_mismatch')!);
   }
 
-  const correctnessPercentage = totalFields > 0 ? (correctFields / totalFields) * 100 : 100;
-
-  return {
+  const result = {
     companyId: stageCompany.wikidataId,
     companyName: stageCompany.name,
     errors,
-    correctnessPercentage: Math.round(correctnessPercentage),
+    correctnessPercentage: Math.round(correctFields / totalFields * 100),
   };
+
+  // Logga alla fel som hamnat i "annat" kategorin
+  const otherErrors = errors.filter(e => e.type === 'other');
+  if (otherErrors.length > 0) {
+    console.log(`❗ Företag med "annat" fel - ${stageCompany.name}:`, {
+      otherErrorsCount: otherErrors.length,
+      allErrors: errors.map(e => e.type),
+      debugData
+    });
+  }
+
+  return result;
 }
 
 export function generateQualityStats(comparisons: CompanyComparison[]): QualityStats {
