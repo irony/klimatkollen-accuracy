@@ -1,21 +1,26 @@
 import { Company, ErrorCategory, CompanyComparison, QualityStats, ReportingPeriod } from '@/types/data-quality';
 
 export const ERROR_CATEGORIES: ErrorCategory[] = [
-  { type: 'scope1_error', description: 'Scope 1 utsläpp fel', color: '#f0759a' }, // pink-3
-  { type: 'scope2_error', description: 'Scope 2 utsläpp fel', color: '#f48f2a' }, // orange-3
-  { type: 'scope3_error', description: 'Scope 3 utsläpp fel', color: '#aae506' }, // green-3
+  { type: 'scope1_major_error', description: 'Scope 1 stort fel (>20%)', color: '#f0759a' }, // pink-3
+  { type: 'scope1_minor_error', description: 'Scope 1 litet fel (5-20%)', color: '#eea0b7' }, // pink-2
+  { type: 'scope2_major_error', description: 'Scope 2 stort fel (>20%)', color: '#f48f2a' }, // orange-3
+  { type: 'scope2_minor_error', description: 'Scope 2 litet fel (5-20%)', color: '#fdb768' }, // orange-2
+  { type: 'scope3_major_error', description: 'Scope 3 stort fel (>20%)', color: '#aae506' }, // green-3
+  { type: 'scope3_minor_error', description: 'Scope 3 litet fel (5-20%)', color: '#d5fd63' }, // green-2
   { type: 'currency_error', description: 'Fel valuta', color: '#59a0e1' }, // blue-3
   { type: 'unit_error', description: 'Fel enhet (ton/kton)', color: '#99cfff' }, // blue-2
-  { type: 'missing_year', description: 'Saknar år', color: '#eea0b7' }, // pink-2
-  { type: 'missing_revenue', description: 'Saknar omsättning', color: '#fdb768' }, // orange-2
-  { type: 'revenue_close', description: 'Omsättning nästan rätt', color: '#d5fd63' }, // green-2
-  { type: 'missing_scope1', description: 'Saknar Scope 1 data', color: '#f0759a' }, // pink-3 variant
-  { type: 'missing_scope2', description: 'Saknar Scope 2 data', color: '#f48f2a' }, // orange-3 variant
-  { type: 'missing_scope3', description: 'Saknar Scope 3 data', color: '#aae506' }, // green-3 variant
-  { type: 'year_mismatch', description: 'Fel rapportår', color: '#97455d' }, // pink-4
-  { type: 'name_mismatch', description: 'Företagsnamn skiljer sig', color: '#6c9105' }, // green-4
-  { type: 'id_mismatch', description: 'ID:n matchar inte', color: '#206288' }, // blue-4
-  { type: 'data_structure_error', description: 'Strukturfel i data', color: '#b25f00' }, // orange-4
+  { type: 'missing_year', description: 'Saknar år', color: '#97455d' }, // pink-4
+  { type: 'revenue_major_error', description: 'Omsättning stort fel (>20%)', color: '#b25f00' }, // orange-4
+  { type: 'revenue_minor_error', description: 'Omsättning litet fel (10-20%)', color: '#fde7ce' }, // orange-1
+  { type: 'employees_major_error', description: 'Anställda stort fel (>20%)', color: '#206288' }, // blue-4
+  { type: 'employees_minor_error', description: 'Anställda litet fel (10-20%)', color: '#d4e7f7' }, // blue-1
+  { type: 'missing_scope1', description: 'Saknar Scope 1 data', color: '#73263d' }, // pink-5
+  { type: 'missing_scope2', description: 'Saknar Scope 2 data', color: '#6b3700' }, // orange-5
+  { type: 'missing_scope3', description: 'Saknar Scope 3 data', color: '#3d4b16' }, // green-5
+  { type: 'missing_revenue', description: 'Saknar omsättning', color: '#13364e' }, // blue-5
+  { type: 'missing_employees', description: 'Saknar anställda', color: '#878787' }, // grey
+  { type: 'year_mismatch', description: 'Fel rapportår', color: '#6c9105' }, // green-4
+  { type: 'data_structure_error', description: 'Strukturfel i data', color: '#878787' }, // grey
   { type: 'other', description: 'Annat fel', color: '#878787' }, // grey
 ];
 
@@ -34,7 +39,7 @@ function getLatestReportingPeriod(company: Company): ReportingPeriod | null {
 
 export function compareCompanies(stageCompany: Company, prodCompany: Company): CompanyComparison {
   const errors: ErrorCategory[] = [];
-  let totalFields = 8; // Fast antal fält vi kontrollerar
+  let totalFields = 7; // Uppdaterat antal fält (tar bort namn, lägger till anställda)
   let correctFields = 0;
 
   const stagePeriod = getLatestReportingPeriod(stageCompany);
@@ -56,6 +61,9 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   const stageRevenue = stagePeriod?.economy?.turnover?.value;
   const prodRevenue = prodPeriod?.economy?.turnover?.value;
   
+  const stageEmployees = stagePeriod?.economy?.employees?.value;
+  const prodEmployees = prodPeriod?.economy?.employees?.value;
+  
   const stageYear = stagePeriod ? new Date(stagePeriod.startDate).getFullYear() : undefined;
   const prodYear = prodPeriod ? new Date(prodPeriod.startDate).getFullYear() : undefined;
 
@@ -68,6 +76,7 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       scope3: stageScope3,
       currency: stageCurrency,
       revenue: stageRevenue,
+      employees: stageEmployees,
       year: stageYear
     },
     prod: {
@@ -76,6 +85,7 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       scope3: prodScope3,
       currency: prodCurrency,
       revenue: prodRevenue,
+      employees: prodEmployees,
       year: prodYear
     }
   };
@@ -93,7 +103,14 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       if (ratio > 900 && ratio < 1100) {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
       } else {
-        errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_error')!);
+        const percentDiff = Math.abs(stageScope1 - prodScope1) / prodScope1;
+        if (percentDiff > 0.2) {
+          errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_major_error')!);
+        } else if (percentDiff > 0.05) {
+          errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_minor_error')!);
+        } else {
+          correctFields++; // Inom 5% acceptabelt
+        }
       }
     }
   }
@@ -111,7 +128,14 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       if (ratio > 900 && ratio < 1100) {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
       } else {
-        errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_error')!);
+        const percentDiff = Math.abs(stageScope2 - prodScope2) / prodScope2;
+        if (percentDiff > 0.2) {
+          errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_major_error')!);
+        } else if (percentDiff > 0.05) {
+          errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_minor_error')!);
+        } else {
+          correctFields++; // Inom 5% acceptabelt
+        }
       }
     }
   }
@@ -129,7 +153,14 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       if (ratio > 900 && ratio < 1100) {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
       } else {
-        errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_error')!);
+        const percentDiff = Math.abs(stageScope3 - prodScope3) / prodScope3;
+        if (percentDiff > 0.2) {
+          errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_major_error')!);
+        } else if (percentDiff > 0.05) {
+          errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_minor_error')!);
+        } else {
+          correctFields++; // Inom 5% acceptabelt
+        }
       }
     }
   }
@@ -165,24 +196,16 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     } else if (stageRevenue && prodRevenue) {
       const difference = Math.abs(stageRevenue - prodRevenue) / prodRevenue;
       if (difference < 0.1) {
-        correctFields++; // Acceptabelt nära
+        correctFields++; // Inom 10% acceptabelt
       } else if (difference < 0.2) {
-        errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_close')!);
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_minor_error')!);
       } else {
         // Kolla om det är enhetsproblem (tusental vs miljoner)
         const revenueRatio = Math.abs(stageRevenue / prodRevenue);
         if (revenueRatio > 900 && revenueRatio < 1100) {
           errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
         } else {
-          // Detta hamnar i "annat" - logga för analys
-          console.log(`🔍 Revenue "annat" fel för ${stageCompany.name}:`, {
-            stage: stageRevenue,
-            prod: prodRevenue,
-            difference: difference,
-            ratio: revenueRatio,
-            debugData
-          });
-          errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
+          errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_major_error')!);
         }
       }
     } else {
@@ -190,18 +213,35 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     }
   }
 
-  // Kontrollera namn
-  if (stageCompany.name === prodCompany.name) {
+  // Kontrollera anställda
+  if (stageEmployees === prodEmployees) {
     correctFields++;
   } else {
-    errors.push(ERROR_CATEGORIES.find(e => e.type === 'name_mismatch')!);
+    if (!stageEmployees && prodEmployees) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_employees')!);
+    } else if (stageEmployees && !prodEmployees) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
+    } else if (stageEmployees && prodEmployees) {
+      const difference = Math.abs(stageEmployees - prodEmployees) / prodEmployees;
+      if (difference < 0.1) {
+        correctFields++; // Inom 10% acceptabelt
+      } else if (difference < 0.2) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'employees_minor_error')!);
+      } else {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'employees_major_error')!);
+      }
+    } else {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
+    }
   }
 
-  // Kontrollera wikidataId  
+  // Kontrollera wikidataId (ignorerar företagsnamn enligt användares önskemål)
   if (stageCompany.wikidataId === prodCompany.wikidataId) {
     correctFields++;
   } else {
-    errors.push(ERROR_CATEGORIES.find(e => e.type === 'id_mismatch')!);
+    // Detta borde aldrig hända eftersom vi matchar på wikidataId, men logga för säkerhets skull
+    console.log(`🚨 ID mismatch för ${stageCompany.name}: stage=${stageCompany.wikidataId}, prod=${prodCompany.wikidataId}`);
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
   }
 
   const result = {

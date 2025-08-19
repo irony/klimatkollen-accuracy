@@ -59,9 +59,11 @@ export interface Company {
 }
 
 export interface ErrorCategory {
-  type: 'scope1_error' | 'scope2_error' | 'scope3_error' | 'currency_error' | 'unit_error' | 
-        'missing_year' | 'missing_revenue' | 'revenue_close' | 'missing_scope1' | 'missing_scope2' | 
-        'missing_scope3' | 'year_mismatch' | 'name_mismatch' | 'id_mismatch' | 'data_structure_error' | 'other';
+  type: 'scope1_major_error' | 'scope1_minor_error' | 'scope2_major_error' | 'scope2_minor_error' | 
+        'scope3_major_error' | 'scope3_minor_error' | 'currency_error' | 'unit_error' | 
+        'missing_year' | 'revenue_major_error' | 'revenue_minor_error' | 'employees_major_error' | 
+        'employees_minor_error' | 'missing_scope1' | 'missing_scope2' | 'missing_scope3' | 
+        'missing_revenue' | 'missing_employees' | 'year_mismatch' | 'data_structure_error' | 'other';
   description: string;
   color: string;
 }
