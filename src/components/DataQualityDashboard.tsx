@@ -28,12 +28,19 @@ export default function DataQualityDashboard() {
     try {
       setLoading(true);
       
-      console.log('DataQualityDashboard: Using mock data...');
-      // Import mock data instead of API calls
-      const { mockStageCompanies, mockProdCompanies } = await import('@/data/mock-companies');
-      
-      const stageCompanies: Company[] = mockStageCompanies;
-      const prodCompanies: Company[] = mockProdCompanies;
+      console.log('DataQualityDashboard: Fetching from APIs...');
+      // Fetch from real APIs using proxy
+      const [stageResponse, prodResponse] = await Promise.all([
+        fetch('/api/stage/api/companies'),
+        fetch('/api/prod/api/companies')
+      ]);
+
+      if (!stageResponse.ok || !prodResponse.ok) {
+        throw new Error('Failed to fetch from one or both APIs');
+      }
+
+      const stageCompanies: Company[] = await stageResponse.json();
+      const prodCompanies: Company[] = await prodResponse.json();
 
       setStageData(stageCompanies);
       setProdData(prodCompanies);
