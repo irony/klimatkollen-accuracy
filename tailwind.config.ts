@@ -61,7 +61,37 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Klimatkollen palette för felkategorier
+				orange: {
+					1: "#FDE7CE",
+					2: "#FDB768", 
+					3: "#F48F2A",
+					4: "#B25F00",
+					5: "#6B3700",
+				},
+				green: {
+					1: "#F1FFCC",
+					2: "#D5FD63",
+					3: "#AAE506",
+					4: "#6C9105",
+					5: "#3D4B16",
+				},
+				pink: {
+					1: "#FAE1E9",
+					2: "#EEA0B7",
+					3: "#F0759A",
+					4: "#97455D",
+					5: "#73263D",
+				},
+				blue: {
+					1: "#D4E7F7",
+					2: "#99CFFF",
+					3: "#59A0E1",
+					4: "#206288",
+					5: "#13364E",
+				},
+				grey: "#878787"
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
