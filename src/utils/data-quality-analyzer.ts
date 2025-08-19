@@ -14,80 +14,110 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
 
 export function compareCompanies(stageCompany: Company, prodCompany: Company): CompanyComparison {
   const errors: ErrorCategory[] = [];
-  let totalFields = 0;
+  let totalFields = 8; // Fast antal fält vi kontrollerar
   let correctFields = 0;
 
-  // Jämför scope 1
-  if (stageCompany.scope1 !== undefined || prodCompany.scope1 !== undefined) {
-    totalFields++;
-    if (stageCompany.scope1 !== prodCompany.scope1) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_error')!);
+  // Jämför scope 1 - alltid räkna som ett fält
+  if (stageCompany.scope1 === prodCompany.scope1) {
+    correctFields++;
+  } else {
+    // Kolla om det är ett enhetsproblem (ton vs kton)
+    if (stageCompany.scope1 && prodCompany.scope1) {
+      const ratio = Math.abs(stageCompany.scope1 / prodCompany.scope1);
+      if (ratio > 900 && ratio < 1100) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+      } else {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_error')!);
+      }
     } else {
-      correctFields++;
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_error')!);
     }
   }
 
   // Jämför scope 2
-  if (stageCompany.scope2 !== undefined || prodCompany.scope2 !== undefined) {
-    totalFields++;
-    if (stageCompany.scope2 !== prodCompany.scope2) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_error')!);
+  if (stageCompany.scope2 === prodCompany.scope2) {
+    correctFields++;
+  } else {
+    // Kolla enhetsproblem
+    if (stageCompany.scope2 && prodCompany.scope2) {
+      const ratio = Math.abs(stageCompany.scope2 / prodCompany.scope2);
+      if (ratio > 900 && ratio < 1100) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+      } else {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_error')!);
+      }
     } else {
-      correctFields++;
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_error')!);
     }
   }
 
   // Jämför scope 3
-  if (stageCompany.scope3 !== undefined || prodCompany.scope3 !== undefined) {
-    totalFields++;
-    if (stageCompany.scope3 !== prodCompany.scope3) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_error')!);
+  if (stageCompany.scope3 === prodCompany.scope3) {
+    correctFields++;
+  } else {
+    // Kolla enhetsproblem
+    if (stageCompany.scope3 && prodCompany.scope3) {
+      const ratio = Math.abs(stageCompany.scope3 / prodCompany.scope3);
+      if (ratio > 900 && ratio < 1100) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+      } else {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_error')!);
+      }
     } else {
-      correctFields++;
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_error')!);
     }
   }
 
   // Jämför valuta
-  if (stageCompany.currency !== undefined || prodCompany.currency !== undefined) {
-    totalFields++;
-    if (stageCompany.currency !== prodCompany.currency) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'currency_error')!);
+  if (stageCompany.currency === prodCompany.currency) {
+    correctFields++;
+  } else {
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'currency_error')!);
+  }
+
+  // Kontrollera år
+  if (stageCompany.year === prodCompany.year) {
+    correctFields++;
+  } else {
+    if (!stageCompany.year && prodCompany.year) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_year')!);
     } else {
-      correctFields++;
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
     }
   }
 
-  // Kontrollera enhetsproblem (skillnad på 1000x kan indikera ton vs kton)
-  if (stageCompany.scope1 && prodCompany.scope1) {
-    const ratio = Math.abs(stageCompany.scope1 / prodCompany.scope1);
-    if (ratio > 900 && ratio < 1100) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
-    }
-  }
-
-  // Kontrollera saknade år
-  if (!stageCompany.year && prodCompany.year) {
-    errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_year')!);
-  }
-
-  // Kontrollera saknade omsättning
-  if (!stageCompany.revenue && prodCompany.revenue) {
-    errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_revenue')!);
-  }
-
-  // Kontrollera om omsättning är nära rätt (inom 10%)
-  if (stageCompany.revenue && prodCompany.revenue) {
-    totalFields++;
-    const difference = Math.abs(stageCompany.revenue - prodCompany.revenue) / prodCompany.revenue;
-    if (difference > 0.1) {
-      if (difference < 0.2) {
+  // Kontrollera omsättning
+  if (stageCompany.revenue === prodCompany.revenue) {
+    correctFields++;
+  } else {
+    if (!stageCompany.revenue && prodCompany.revenue) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_revenue')!);
+    } else if (stageCompany.revenue && prodCompany.revenue) {
+      const difference = Math.abs(stageCompany.revenue - prodCompany.revenue) / prodCompany.revenue;
+      if (difference < 0.1) {
+        correctFields++; // Acceptabelt nära
+      } else if (difference < 0.2) {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_close')!);
       } else {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
       }
     } else {
-      correctFields++;
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
     }
+  }
+
+  // Kontrollera namn
+  if (stageCompany.name === prodCompany.name) {
+    correctFields++;
+  } else {
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
+  }
+
+  // Kontrollera id
+  if (stageCompany.id === prodCompany.id) {
+    correctFields++;
+  } else {
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
   }
 
   const correctnessPercentage = totalFields > 0 ? (correctFields / totalFields) * 100 : 100;
