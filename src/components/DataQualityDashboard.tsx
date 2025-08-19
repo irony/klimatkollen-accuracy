@@ -9,6 +9,8 @@ import { compareCompanies, generateQualityStats, ERROR_CATEGORIES } from '@/util
 import { useToast } from '@/hooks/use-toast';
 
 export default function DataQualityDashboard() {
+  console.log('DataQualityDashboard: Component rendering...');
+  
   const [stageData, setStageData] = useState<Company[]>([]);
   const [prodData, setProdData] = useState<Company[]>([]);
   const [comparisons, setComparisons] = useState<CompanyComparison[]>([]);
@@ -17,19 +19,23 @@ export default function DataQualityDashboard() {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('DataQualityDashboard: useEffect running, calling fetchData...');
     fetchData();
   }, []);
 
   const fetchData = async () => {
+    console.log('DataQualityDashboard: fetchData starting...');
     try {
       setLoading(true);
       
+      console.log('DataQualityDashboard: Making API calls...');
       const [stageResponse, prodResponse] = await Promise.all([
         fetch('/api/stage/api/companies'),
         fetch('/api/prod/api/companies'),
       ]);
 
       if (!stageResponse.ok || !prodResponse.ok) {
+        console.error('DataQualityDashboard: API calls failed', { stageOk: stageResponse.ok, prodOk: prodResponse.ok });
         throw new Error('Failed to fetch data from APIs');
       }
 
@@ -67,7 +73,10 @@ export default function DataQualityDashboard() {
     }
   };
 
+  console.log('DataQualityDashboard: Render phase', { loading, qualityStats: !!qualityStats });
+
   if (loading) {
+    console.log('DataQualityDashboard: Showing loading state');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
