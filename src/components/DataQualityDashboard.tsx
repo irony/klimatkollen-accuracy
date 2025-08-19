@@ -90,29 +90,23 @@ export default function DataQualityDashboard() {
   }
 
   const chartConfig = {
-    count: {
-      label: "Antal företag",
-      color: "hsl(var(--primary))",
+    total: {
+      label: "Totalt antal företag",
+      color: "hsl(var(--muted-foreground))",
     },
+    ...ERROR_CATEGORIES.reduce((acc, category) => {
+      acc[category.type] = {
+        label: category.description,
+        color: category.color,
+      };
+      return acc;
+    }, {} as Record<string, { label: string; color: string }>)
   };
 
   const errorChartData = ERROR_CATEGORIES.map(category => ({
     category: category.description,
     count: qualityStats.errorDistribution[category.type] || 0,
     color: category.color,
-  }));
-
-  function getHistogramColor(percentage: number): string {
-    if (percentage >= 90) return '#aae506'; // green-3
-    if (percentage >= 70) return '#d5fd63'; // green-2  
-    if (percentage >= 50) return '#fdb768'; // orange-2
-    if (percentage >= 30) return '#f48f2a'; // orange-3
-    return '#f0759a'; // pink-3
-  }
-
-  const histogram = qualityStats.correctnessHistogram.map(item => ({
-    ...item,
-    fill: getHistogramColor(parseFloat(item.range.split('-')[0]))
   }));
 
   return (
@@ -144,20 +138,28 @@ export default function DataQualityDashboard() {
         <TabsContent value="histogram">
           <Card>
             <CardHeader>
-              <CardTitle>Fördelning av noggrannhet</CardTitle>
+              <CardTitle>Fördelning av noggrannhet med felkategorier</CardTitle>
               <CardDescription>
-                Antal företag per noggrannhetsnivå (5% intervaller)
+                Antal företag per noggrannhetsnivå med feltyper stackade (5% intervaller)
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={histogram}>
+                  <BarChart data={qualityStats.correctnessHistogram}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="range" />
                     <YAxis />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="count" />
+                    {ERROR_CATEGORIES.map(category => (
+                      <Bar 
+                        key={category.type}
+                        dataKey={category.type} 
+                        stackId="errors"
+                        fill={category.color}
+                        name={category.description}
+                      />
+                    ))}
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>

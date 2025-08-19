@@ -75,5 +75,5 @@ export interface QualityStats {
   totalCompanies: number;
   averageCorrectness: number;
   errorDistribution: Record<string, number>;
-  correctnessHistogram: Array<{ range: string; count: number; percentage: number }>;
+  correctnessHistogram: Array<{ range: string; [key: string]: any }>;
 }

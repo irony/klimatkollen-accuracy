@@ -174,20 +174,28 @@ export function generateQualityStats(comparisons: CompanyComparison[]): QualityS
     ).length;
   });
 
-  // Skapa histogram över korrekthet (5% buckets)
-  const histogram: Array<{ range: string; count: number; percentage: number }> = [];
+  // Skapa histogram över korrekthet med felkategorier (5% buckets)
+  const histogram: Array<{ range: string; [key: string]: any }> = [];
   for (let i = 0; i <= 100; i += 5) {
     const rangeStart = i;
     const rangeEnd = Math.min(i + 4, 100);
-    const count = comparisons.filter(comp => 
+    const companiesInRange = comparisons.filter(comp => 
       comp.correctnessPercentage >= rangeStart && comp.correctnessPercentage <= rangeEnd
-    ).length;
+    );
     
-    histogram.push({
+    const rangeData: { range: string; [key: string]: any } = {
       range: `${rangeStart}-${rangeEnd}%`,
-      count,
-      percentage: (count / totalCompanies) * 100,
+      total: companiesInRange.length,
+    };
+
+    // Räkna fel per kategori för denna range
+    ERROR_CATEGORIES.forEach(category => {
+      rangeData[category.type] = companiesInRange.filter(comp => 
+        comp.errors.some(error => error.type === category.type)
+      ).length;
     });
+    
+    histogram.push(rangeData);
   }
 
   return {
