@@ -1,15 +1,15 @@
 import { Company, ErrorCategory, CompanyComparison, QualityStats } from '@/types/data-quality';
 
 export const ERROR_CATEGORIES: ErrorCategory[] = [
-  { type: 'scope1_error', description: 'Scope 1 utsläpp fel', color: '#ef4444' },
-  { type: 'scope2_error', description: 'Scope 2 utsläpp fel', color: '#f97316' },
-  { type: 'scope3_error', description: 'Scope 3 utsläpp fel', color: '#eab308' },
-  { type: 'currency_error', description: 'Fel valuta', color: '#22c55e' },
-  { type: 'unit_error', description: 'Fel enhet (ton/kton)', color: '#3b82f6' },
-  { type: 'missing_year', description: 'Saknar år', color: '#a855f7' },
-  { type: 'missing_revenue', description: 'Saknar omsättning', color: '#ec4899' },
-  { type: 'revenue_close', description: 'Omsättning nästan rätt', color: '#14b8a6' },
-  { type: 'other', description: 'Annat fel', color: '#6b7280' },
+  { type: 'scope1_error', description: 'Scope 1 utsläpp fel', color: '#f0759a' }, // pink-3
+  { type: 'scope2_error', description: 'Scope 2 utsläpp fel', color: '#f48f2a' }, // orange-3
+  { type: 'scope3_error', description: 'Scope 3 utsläpp fel', color: '#aae506' }, // green-3
+  { type: 'currency_error', description: 'Fel valuta', color: '#59a0e1' }, // blue-3
+  { type: 'unit_error', description: 'Fel enhet (ton/kton)', color: '#99cfff' }, // blue-2
+  { type: 'missing_year', description: 'Saknar år', color: '#eea0b7' }, // pink-2
+  { type: 'missing_revenue', description: 'Saknar omsättning', color: '#fdb768' }, // orange-2
+  { type: 'revenue_close', description: 'Omsättning nästan rätt', color: '#d5fd63' }, // green-2
+  { type: 'other', description: 'Annat fel', color: '#878787' }, // grey
 ];
 
 export function compareCompanies(stageCompany: Company, prodCompany: Company): CompanyComparison {
