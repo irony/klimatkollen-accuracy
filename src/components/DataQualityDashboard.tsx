@@ -42,7 +42,7 @@ export default function DataQualityDashboard() {
       // Jämför företagen
       const comparisonResults: CompanyComparison[] = [];
       stageCompanies.forEach(stageCompany => {
-        const prodCompany = prodCompanies.find(p => p.id === stageCompany.id);
+        const prodCompany = prodCompanies.find(p => p.wikidataId === stageCompany.wikidataId);
         if (prodCompany) {
           comparisonResults.push(compareCompanies(stageCompany, prodCompany));
         }

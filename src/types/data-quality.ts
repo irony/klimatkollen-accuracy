@@ -1,13 +1,61 @@
+export interface ReportingPeriod {
+  startDate: string;
+  endDate: string;
+  reportURL?: string;
+  emissions?: {
+    calculatedTotalEmissions?: number;
+    scope1?: {
+      total: number;
+      unit: string;
+    } | null;
+    scope2?: {
+      mb?: number;
+      lb?: number;
+      calculatedTotalEmissions?: number;
+      unit: string;
+    } | null;
+    scope3?: {
+      calculatedTotalEmissions?: number;
+      statedTotalEmissions?: {
+        total: number;
+        unit: string;
+      } | null;
+    } | null;
+    statedTotalEmissions?: {
+      total: number;
+      unit: string;
+    } | null;
+  } | null;
+  economy?: {
+    turnover?: {
+      value: number;
+      currency: string;
+    } | null;
+    employees?: {
+      value: number;
+      unit: string;
+    } | null;
+  } | null;
+}
+
 export interface Company {
-  id: string;
+  wikidataId: string;
   name: string;
-  scope1?: number;
-  scope2?: number;
-  scope3?: number;
-  currency?: string;
-  revenue?: number;
-  year?: number;
-  [key: string]: any;
+  lei?: string;
+  description?: string;
+  reportingPeriods: ReportingPeriod[];
+  industry?: {
+    industryGics?: {
+      sectorCode: string;
+      groupCode: string;
+      industryCode: string;
+      subIndustryCode: string;
+    };
+  };
+  baseYear?: {
+    year: number;
+  };
+  tags?: string[];
 }
 
 export interface ErrorCategory {

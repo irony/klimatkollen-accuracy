@@ -1,4 +1,4 @@
-import { Company, ErrorCategory, CompanyComparison, QualityStats } from '@/types/data-quality';
+import { Company, ErrorCategory, CompanyComparison, QualityStats, ReportingPeriod } from '@/types/data-quality';
 
 export const ERROR_CATEGORIES: ErrorCategory[] = [
   { type: 'scope1_error', description: 'Scope 1 utsläpp fel', color: '#f0759a' }, // pink-3
@@ -12,18 +12,52 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { type: 'other', description: 'Annat fel', color: '#878787' }, // grey
 ];
 
+function getLatestReportingPeriod(company: Company): ReportingPeriod | null {
+  if (!company.reportingPeriods || company.reportingPeriods.length === 0) {
+    return null;
+  }
+  
+  // Sortera efter startDate och ta senaste
+  const sorted = company.reportingPeriods
+    .filter(period => period.emissions || period.economy)
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+  
+  return sorted[0] || null;
+}
+
 export function compareCompanies(stageCompany: Company, prodCompany: Company): CompanyComparison {
   const errors: ErrorCategory[] = [];
   let totalFields = 8; // Fast antal fält vi kontrollerar
   let correctFields = 0;
 
-  // Jämför scope 1 - alltid räkna som ett fält
-  if (stageCompany.scope1 === prodCompany.scope1) {
+  const stagePeriod = getLatestReportingPeriod(stageCompany);
+  const prodPeriod = getLatestReportingPeriod(prodCompany);
+
+  // Extrahera data för jämförelse
+  const stageScope1 = stagePeriod?.emissions?.scope1?.total;
+  const prodScope1 = prodPeriod?.emissions?.scope1?.total;
+  
+  const stageScope2 = stagePeriod?.emissions?.scope2?.calculatedTotalEmissions || stagePeriod?.emissions?.scope2?.mb;
+  const prodScope2 = prodPeriod?.emissions?.scope2?.calculatedTotalEmissions || prodPeriod?.emissions?.scope2?.mb;
+  
+  const stageScope3 = stagePeriod?.emissions?.scope3?.calculatedTotalEmissions;
+  const prodScope3 = prodPeriod?.emissions?.scope3?.calculatedTotalEmissions;
+  
+  const stageCurrency = stagePeriod?.economy?.turnover?.currency;
+  const prodCurrency = prodPeriod?.economy?.turnover?.currency;
+  
+  const stageRevenue = stagePeriod?.economy?.turnover?.value;
+  const prodRevenue = prodPeriod?.economy?.turnover?.value;
+  
+  const stageYear = stagePeriod ? new Date(stagePeriod.startDate).getFullYear() : undefined;
+  const prodYear = prodPeriod ? new Date(prodPeriod.startDate).getFullYear() : undefined;
+
+  // Jämför scope 1
+  if (stageScope1 === prodScope1) {
     correctFields++;
   } else {
-    // Kolla om det är ett enhetsproblem (ton vs kton)
-    if (stageCompany.scope1 && prodCompany.scope1) {
-      const ratio = Math.abs(stageCompany.scope1 / prodCompany.scope1);
+    if (stageScope1 && prodScope1) {
+      const ratio = Math.abs(stageScope1 / prodScope1);
       if (ratio > 900 && ratio < 1100) {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
       } else {
@@ -35,12 +69,11 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   }
 
   // Jämför scope 2
-  if (stageCompany.scope2 === prodCompany.scope2) {
+  if (stageScope2 === prodScope2) {
     correctFields++;
   } else {
-    // Kolla enhetsproblem
-    if (stageCompany.scope2 && prodCompany.scope2) {
-      const ratio = Math.abs(stageCompany.scope2 / prodCompany.scope2);
+    if (stageScope2 && prodScope2) {
+      const ratio = Math.abs(stageScope2 / prodScope2);
       if (ratio > 900 && ratio < 1100) {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
       } else {
@@ -52,12 +85,11 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   }
 
   // Jämför scope 3
-  if (stageCompany.scope3 === prodCompany.scope3) {
+  if (stageScope3 === prodScope3) {
     correctFields++;
   } else {
-    // Kolla enhetsproblem
-    if (stageCompany.scope3 && prodCompany.scope3) {
-      const ratio = Math.abs(stageCompany.scope3 / prodCompany.scope3);
+    if (stageScope3 && prodScope3) {
+      const ratio = Math.abs(stageScope3 / prodScope3);
       if (ratio > 900 && ratio < 1100) {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
       } else {
@@ -69,17 +101,17 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   }
 
   // Jämför valuta
-  if (stageCompany.currency === prodCompany.currency) {
+  if (stageCurrency === prodCurrency) {
     correctFields++;
   } else {
     errors.push(ERROR_CATEGORIES.find(e => e.type === 'currency_error')!);
   }
 
   // Kontrollera år
-  if (stageCompany.year === prodCompany.year) {
+  if (stageYear === prodYear) {
     correctFields++;
   } else {
-    if (!stageCompany.year && prodCompany.year) {
+    if (!stageYear && prodYear) {
       errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_year')!);
     } else {
       errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
@@ -87,13 +119,13 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   }
 
   // Kontrollera omsättning
-  if (stageCompany.revenue === prodCompany.revenue) {
+  if (stageRevenue === prodRevenue) {
     correctFields++;
   } else {
-    if (!stageCompany.revenue && prodCompany.revenue) {
+    if (!stageRevenue && prodRevenue) {
       errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_revenue')!);
-    } else if (stageCompany.revenue && prodCompany.revenue) {
-      const difference = Math.abs(stageCompany.revenue - prodCompany.revenue) / prodCompany.revenue;
+    } else if (stageRevenue && prodRevenue) {
+      const difference = Math.abs(stageRevenue - prodRevenue) / prodRevenue;
       if (difference < 0.1) {
         correctFields++; // Acceptabelt nära
       } else if (difference < 0.2) {
@@ -113,8 +145,8 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
   }
 
-  // Kontrollera id
-  if (stageCompany.id === prodCompany.id) {
+  // Kontrollera wikidataId
+  if (stageCompany.wikidataId === prodCompany.wikidataId) {
     correctFields++;
   } else {
     errors.push(ERROR_CATEGORIES.find(e => e.type === 'other')!);
@@ -123,7 +155,7 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   const correctnessPercentage = totalFields > 0 ? (correctFields / totalFields) * 100 : 100;
 
   return {
-    companyId: stageCompany.id,
+    companyId: stageCompany.wikidataId,
     companyName: stageCompany.name,
     errors,
     correctnessPercentage: Math.round(correctnessPercentage),
