@@ -25,8 +25,8 @@ export default function DataQualityDashboard() {
       setLoading(true);
       
       const [stageResponse, prodResponse] = await Promise.all([
-        fetch('https://stage-api.klimatkollen.se/api/companies'),
-        fetch('https://api.klimatkollen.se/api/companies'),
+        fetch('/api/stage/api/companies'),
+        fetch('/api/prod/api/companies'),
       ]);
 
       if (!stageResponse.ok || !prodResponse.ok) {

@@ -8,6 +8,18 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/api/stage': {
+        target: 'https://stage-api.klimatkollen.se',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/stage/, ''),
+      },
+      '/api/prod': {
+        target: 'https://api.klimatkollen.se',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/prod/, ''),
+      },
+    },
   },
   plugins: [
     react(),
