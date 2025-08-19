@@ -102,6 +102,19 @@ export default function DataQualityDashboard() {
     color: category.color,
   }));
 
+  function getHistogramColor(percentage: number): string {
+    if (percentage >= 90) return '#aae506'; // green-3
+    if (percentage >= 70) return '#d5fd63'; // green-2  
+    if (percentage >= 50) return '#fdb768'; // orange-2
+    if (percentage >= 30) return '#f48f2a'; // orange-3
+    return '#f0759a'; // pink-3
+  }
+
+  const histogram = qualityStats.correctnessHistogram.map(item => ({
+    ...item,
+    fill: getHistogramColor(parseFloat(item.range.split('-')[0]))
+  }));
+
   return (
     <div className="container mx-auto p-6 space-y-8">
       <div className="text-center space-y-4">
@@ -139,12 +152,12 @@ export default function DataQualityDashboard() {
             <CardContent>
               <ChartContainer config={chartConfig} className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={qualityStats.correctnessHistogram}>
+                  <BarChart data={histogram}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="range" />
                     <YAxis />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="count" fill="hsl(var(--primary))" />
+                    <Bar dataKey="count" />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
