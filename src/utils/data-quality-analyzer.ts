@@ -278,11 +278,11 @@ export function generateQualityStats(comparisons: CompanyComparison[]): QualityS
     ).length;
   });
 
-  // Skapa histogram över korrekthet med felkategorier (5% buckets)
+  // Skapa histogram över korrekthet med felkategorier (2% buckets)
   const histogram: Array<{ range: string; [key: string]: any }> = [];
-  for (let i = 0; i <= 100; i += 5) {
+  for (let i = 0; i <= 100; i += 2) {
     const rangeStart = i;
-    const rangeEnd = Math.min(i + 4, 100);
+    const rangeEnd = Math.min(i + 1, 100);
     const companiesInRange = comparisons.filter(comp => 
       comp.correctnessPercentage >= rangeStart && comp.correctnessPercentage <= rangeEnd
     );
