@@ -8,7 +8,7 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { type: 'scope3_major_error', description: 'Scope 3 stort fel (>20%)', color: '#aae506' }, // green-3
   { type: 'scope3_minor_error', description: 'Scope 3 litet fel (5-20%)', color: '#d5fd63' }, // green-2
   { type: 'currency_error', description: 'Fel valuta', color: '#59a0e1' }, // blue-3
-  { type: 'unit_error', description: 'Fel enhet (ton/kton)', color: '#99cfff' }, // blue-2
+  { type: 'unit_error', description: 'Konsistent enhetsproblem (tusental)', color: '#99cfff' }, // blue-2
   { type: 'missing_year', description: 'Saknar år', color: '#97455d' }, // pink-4
   { type: 'revenue_major_error', description: 'Omsättning stort fel (>20%)', color: '#b25f00' }, // orange-4
   { type: 'revenue_minor_error', description: 'Omsättning litet fel (10-20%)', color: '#fde7ce' }, // orange-1
@@ -90,19 +90,48 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     }
   };
 
-  // Jämför scope 1
-  if (stageScope1 === prodScope1) {
-    correctFields++;
-  } else if (stageScope1 === null || stageScope1 === undefined) {
-    // Stage saknar scope 1 som finns i prod
-    errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope1')!);
-  } else if (prodScope1 === null || prodScope1 === undefined) {
-    // Stage har scope 1 som saknas i prod - detta är OK
-    correctFields++;
+  // Först kolla om det finns konsistent enhetsproblem (tusental vs enheter)
+  const ratios: number[] = [];
+  const hasValues = { scope1: false, scope2: false, scope3: false };
+  
+  if (stageScope1 && prodScope1) {
+    ratios.push(Math.abs(stageScope1 / prodScope1));
+    hasValues.scope1 = true;
+  }
+  if (stageScope2 && prodScope2) {
+    ratios.push(Math.abs(stageScope2 / prodScope2));
+    hasValues.scope2 = true;
+  }
+  if (stageScope3 && prodScope3) {
+    ratios.push(Math.abs(stageScope3 / prodScope3));
+    hasValues.scope3 = true;
+  }
+
+  // Kolla om det finns konsistent tusental-problem (alla ratios omkring 1000 eller 0.001)
+  const hasConsistentUnitError = ratios.length >= 2 && ratios.every(ratio => 
+    (ratio > 900 && ratio < 1100) || (ratio > 0.0009 && ratio < 0.0011)
+  );
+
+  if (hasConsistentUnitError) {
+    // Lägg till ett enda enhetsproblem istället för individuella fel
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+    // Räkna alla fält med värden som korrekta (enhetsproblem är fixat)
+    if (hasValues.scope1) correctFields++;
+    if (hasValues.scope2) correctFields++;
+    if (hasValues.scope3) correctFields++;
   } else {
-    const ratio = Math.abs(stageScope1 / prodScope1);
-    if (ratio > 900 && ratio < 1100) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+    // Jämför scope 1
+    if (stageScope1 === prodScope1) {
+      correctFields++;
+    } else if (stageScope1 === null || stageScope1 === undefined) {
+      if (prodScope1 !== null && prodScope1 !== undefined) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope1')!);
+      } else {
+        correctFields++;
+      }
+    } else if (prodScope1 === null || prodScope1 === undefined) {
+      // Stage har scope 1 som saknas i prod - detta är OK
+      correctFields++;
     } else {
       const percentDiff = Math.abs(stageScope1 - prodScope1) / prodScope1;
       if (percentDiff > 0.2) {
@@ -113,21 +142,19 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
         correctFields++; // Inom 5% acceptabelt
       }
     }
-  }
 
-  // Jämför scope 2
-  if (stageScope2 === prodScope2) {
-    correctFields++;
-  } else if (stageScope2 === null || stageScope2 === undefined) {
-    // Stage saknar scope 2 som finns i prod
-    errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope2')!);
-  } else if (prodScope2 === null || prodScope2 === undefined) {
-    // Stage har scope 2 som saknas i prod - detta är OK
-    correctFields++;
-  } else {
-    const ratio = Math.abs(stageScope2 / prodScope2);
-    if (ratio > 900 && ratio < 1100) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+    // Jämför scope 2
+    if (stageScope2 === prodScope2) {
+      correctFields++;
+    } else if (stageScope2 === null || stageScope2 === undefined) {
+      if (prodScope2 !== null && prodScope2 !== undefined) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope2')!);
+      } else {
+        correctFields++;
+      }
+    } else if (prodScope2 === null || prodScope2 === undefined) {
+      // Stage har scope 2 som saknas i prod - detta är OK
+      correctFields++;
     } else {
       const percentDiff = Math.abs(stageScope2 - prodScope2) / prodScope2;
       if (percentDiff > 0.2) {
@@ -138,21 +165,19 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
         correctFields++; // Inom 5% acceptabelt
       }
     }
-  }
 
-  // Jämför scope 3
-  if (stageScope3 === prodScope3) {
-    correctFields++;
-  } else if (stageScope3 === null || stageScope3 === undefined) {
-    // Stage saknar scope 3 som finns i prod
-    errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope3')!);
-  } else if (prodScope3 === null || prodScope3 === undefined) {
-    // Stage har scope 3 som saknas i prod - detta är OK
-    correctFields++;
-  } else {
-    const ratio = Math.abs(stageScope3 / prodScope3);
-    if (ratio > 900 && ratio < 1100) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+    // Jämför scope 3
+    if (stageScope3 === prodScope3) {
+      correctFields++;
+    } else if (stageScope3 === null || stageScope3 === undefined) {
+      if (prodScope3 !== null && prodScope3 !== undefined) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope3')!);
+      } else {
+        correctFields++;
+      }
+    } else if (prodScope3 === null || prodScope3 === undefined) {
+      // Stage har scope 3 som saknas i prod - detta är OK
+      correctFields++;
     } else {
       const percentDiff = Math.abs(stageScope3 - prodScope3) / prodScope3;
       if (percentDiff > 0.2) {
