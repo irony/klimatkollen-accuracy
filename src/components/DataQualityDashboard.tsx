@@ -32,10 +32,14 @@ export default function DataQualityDashboard() {
       setLoading(true);
       
       console.log('DataQualityDashboard: Fetching from APIs via proxy...');
-      // Fetch from APIs using Vite proxy
+      // Use proxy in development, direct URLs in production
+      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname.includes('sandbox');
+      const stageUrl = isDevelopment ? '/api/stage/api/companies' : 'https://stage-api.klimatkollen.se/api/companies';
+      const prodUrl = isDevelopment ? '/api/prod/api/companies' : 'https://api.klimatkollen.se/api/companies';
+
       const [stageResponse, prodResponse] = await Promise.all([
-        fetch('/api/stage/api/companies'),
-        fetch('/api/prod/api/companies')
+        fetch(stageUrl),
+        fetch(prodUrl)
       ]);
 
       if (!stageResponse.ok || !prodResponse.ok) {
