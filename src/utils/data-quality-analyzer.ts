@@ -282,6 +282,7 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   // Om åren inte matchar hoppar vi över numeriska jämförelser (ingen penalty för detta)
 
   // Kolla om det finns fel räkenskapsår - data från ett år har rapporterats som data från ett annat år
+  // Bara rapportera detta fel om det är EXAKT samma siffror på olika år
   let fiscalYearErrorDetails: CompanyComparison['fiscalYearError'] = undefined;
   
   if (stageCompany.reportingPeriods.length > 1 || prodCompany.reportingPeriods.length > 1) {
@@ -290,31 +291,7 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     const prodPeriodsWithData = prodCompany.reportingPeriods.filter(p => p.emissions || p.economy);
     
     if (stagePeriodsWithData.length > 0 && prodPeriodsWithData.length > 0) {
-      // Jämför alla möjliga kombinationer av år för att hitta bättre matchningar
-      let bestMatch = { stageYear: stageYear!, prodYear: prodYear!, matchScore: 0 };
-      let currentMatchScore = 0;
-      
-      // Beräkna matchscore för nuvarande årjämförelse
-      if (stageScope1 && prodScope1) {
-        const diff = Math.abs(stageScope1 - prodScope1) / prodScope1;
-        if (diff < 0.05) currentMatchScore += 3;
-        else if (diff < 0.2) currentMatchScore += 1;
-      }
-      if (stageScope2 && prodScope2) {
-        const diff = Math.abs(stageScope2 - prodScope2) / prodScope2;
-        if (diff < 0.05) currentMatchScore += 3;
-        else if (diff < 0.2) currentMatchScore += 1;
-      }
-      if (stageScope3 && prodScope3) {
-        const diff = Math.abs(stageScope3 - prodScope3) / prodScope3;
-        if (diff < 0.05) currentMatchScore += 3;
-        else if (diff < 0.2) currentMatchScore += 1;
-      }
-      
-      bestMatch.matchScore = currentMatchScore;
-      const originalMatchScore = currentMatchScore;
-      
-      // Testa alla andra kombinationer
+      // Testa alla andra kombinationer för att hitta exakt samma siffror på olika år
       for (const stagePeriod of stagePeriodsWithData) {
         for (const prodPeriod of prodPeriodsWithData) {
           const testStageYear = new Date(stagePeriod.startDate).getFullYear();
@@ -330,46 +307,58 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
           const testStageScope3 = stagePeriod.emissions?.scope3?.calculatedTotalEmissions;
           const testProdScope3 = prodPeriod.emissions?.scope3?.calculatedTotalEmissions;
           
-          let testMatchScore = 0;
+          // Räkna hur många värden som är exakt samma (eller extremt nära identiska)
+          let identicalValues = 0;
+          let totalComparisons = 0;
           
-          if (testStageScope1 && testProdScope1) {
-            const diff = Math.abs(testStageScope1 - testProdScope1) / testProdScope1;
-            if (diff < 0.05) testMatchScore += 3;
-            else if (diff < 0.2) testMatchScore += 1;
-          }
-          if (testStageScope2 && testProdScope2) {
-            const diff = Math.abs(testStageScope2 - testProdScope2) / testProdScope2;
-            if (diff < 0.05) testMatchScore += 3;
-            else if (diff < 0.2) testMatchScore += 1;
-          }
-          if (testStageScope3 && testProdScope3) {
-            const diff = Math.abs(testStageScope3 - testProdScope3) / testProdScope3;
-            if (diff < 0.05) testMatchScore += 3;
-            else if (diff < 0.2) testMatchScore += 1;
+          // Kolla scope 1
+          if (testStageScope1 && testProdScope1 && stageScope1 && prodScope1) {
+            totalComparisons++;
+            const diffCurrent = Math.abs(stageScope1 - prodScope1) / prodScope1;
+            const diffTest = Math.abs(testStageScope1 - testProdScope1) / testProdScope1;
+            // Kräv att värdena är praktiskt taget identiska (mindre än 0.1% skillnad)
+            if (diffTest < 0.001 && diffCurrent > 0.05) {
+              identicalValues++;
+            }
           }
           
-          // Om denna kombination ger betydligt bättre matchning, är det troligen fel räkenskapsår
-          if (testMatchScore > bestMatch.matchScore + 2) { // Kräv betydlig förbättring
-            bestMatch = { 
-              stageYear: testStageYear, 
-              prodYear: testProdYear, 
-              matchScore: testMatchScore 
+          // Kolla scope 2
+          if (testStageScope2 && testProdScope2 && stageScope2 && prodScope2) {
+            totalComparisons++;
+            const diffCurrent = Math.abs(stageScope2 - prodScope2) / prodScope2;
+            const diffTest = Math.abs(testStageScope2 - testProdScope2) / testProdScope2;
+            if (diffTest < 0.001 && diffCurrent > 0.05) {
+              identicalValues++;
+            }
+          }
+          
+          // Kolla scope 3
+          if (testStageScope3 && testProdScope3 && stageScope3 && prodScope3) {
+            totalComparisons++;
+            const diffCurrent = Math.abs(stageScope3 - prodScope3) / prodScope3;
+            const diffTest = Math.abs(testStageScope3 - testProdScope3) / testProdScope3;
+            if (diffTest < 0.001 && diffCurrent > 0.05) {
+              identicalValues++;
+            }
+          }
+          
+          // Om minst ett värde är identiskt på annat år, medan nuvarande år har fel, rapportera fel
+          if (identicalValues > 0 && totalComparisons > 0) {
+            errors.push(ERROR_CATEGORIES.find(e => e.type === 'wrong_fiscal_year')!);
+            totalPenalty += 3; // Måttligt fel - rätt data men fel år (3%)
+            
+            fiscalYearErrorDetails = {
+              originalComparison: { stageYear: stageYear!, prodYear: prodYear! },
+              betterMatch: { stageYear: testStageYear, prodYear: testProdYear },
+              originalMatchScore: 0, // Nuvarande matchning har fel
+              betterMatchScore: identicalValues // Antal identiska värden
             };
+            
+            // Bryt ut ur looparna när vi hittat ett fel
+            break;
           }
         }
-      }
-      
-      // Om bästa matchningen inte är den ursprungliga års-kombinationen, rapportera fel
-      if (bestMatch.stageYear !== stageYear || bestMatch.prodYear !== prodYear) {
-        errors.push(ERROR_CATEGORIES.find(e => e.type === 'wrong_fiscal_year')!);
-        totalPenalty += 3; // Måttligt fel - rätt data men fel år (3%)
-        
-        fiscalYearErrorDetails = {
-          originalComparison: { stageYear: stageYear!, prodYear: prodYear! },
-          betterMatch: { stageYear: bestMatch.stageYear, prodYear: bestMatch.prodYear },
-          originalMatchScore,
-          betterMatchScore: bestMatch.matchScore
-        };
+        if (fiscalYearErrorDetails) break;
       }
     }
   }
