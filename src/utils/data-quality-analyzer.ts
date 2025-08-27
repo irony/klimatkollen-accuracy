@@ -282,6 +282,8 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   // Om åren inte matchar hoppar vi över numeriska jämförelser (ingen penalty för detta)
 
   // Kolla om det finns fel räkenskapsår - data från ett år har rapporterats som data från ett annat år
+  let fiscalYearErrorDetails: CompanyComparison['fiscalYearError'] = undefined;
+  
   if (stageCompany.reportingPeriods.length > 1 || prodCompany.reportingPeriods.length > 1) {
     // Få alla rapportperioder med data för båda företagen
     const stagePeriodsWithData = stageCompany.reportingPeriods.filter(p => p.emissions || p.economy);
@@ -289,7 +291,7 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     
     if (stagePeriodsWithData.length > 0 && prodPeriodsWithData.length > 0) {
       // Jämför alla möjliga kombinationer av år för att hitta bättre matchningar
-      let bestMatch = { stageYear: stageYear, prodYear: prodYear, matchScore: 0 };
+      let bestMatch = { stageYear: stageYear!, prodYear: prodYear!, matchScore: 0 };
       let currentMatchScore = 0;
       
       // Beräkna matchscore för nuvarande årjämförelse
@@ -310,6 +312,7 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       }
       
       bestMatch.matchScore = currentMatchScore;
+      const originalMatchScore = currentMatchScore;
       
       // Testa alla andra kombinationer
       for (const stagePeriod of stagePeriodsWithData) {
@@ -360,6 +363,13 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       if (bestMatch.stageYear !== stageYear || bestMatch.prodYear !== prodYear) {
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'wrong_fiscal_year')!);
         totalPenalty += 3; // Måttligt fel - rätt data men fel år (3%)
+        
+        fiscalYearErrorDetails = {
+          originalComparison: { stageYear: stageYear!, prodYear: prodYear! },
+          betterMatch: { stageYear: bestMatch.stageYear, prodYear: bestMatch.prodYear },
+          originalMatchScore,
+          betterMatchScore: bestMatch.matchScore
+        };
       }
     }
   }
@@ -380,7 +390,8 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       revenue: { stage: stageRevenue, prod: prodRevenue },
       employees: { stage: stageEmployees, prod: prodEmployees },
       year: { stage: stageYear, prod: prodYear }
-    }
+    },
+    ...(fiscalYearErrorDetails && { fiscalYearError: fiscalYearErrorDetails })
   };
 
   return result;

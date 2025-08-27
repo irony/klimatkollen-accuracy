@@ -128,6 +128,26 @@ export default function CompanyDetailsSection({ comparisons, environment = 'stag
                       </Badge>
                     ))}
                   </div>
+                  
+                  {/* Special handling for fiscal year error */}
+                  {company.fiscalYearError && (
+                    <div className="mt-4 p-3 bg-black-2 rounded-md border border-grey/20">
+                      <h5 className="text-sm font-medium text-grey mb-2">Fel räkenskapsår detaljer:</h5>
+                      <div className="text-xs text-grey space-y-1">
+                        <p>
+                          <span className="text-pink-3">Jämförde:</span> Stage {company.fiscalYearError.originalComparison.stageYear} med Prod {company.fiscalYearError.originalComparison.prodYear}
+                          <span className="ml-2 text-grey">(matchscore: {company.fiscalYearError.originalMatchScore})</span>
+                        </p>
+                        <p>
+                          <span className="text-green-2">Bättre matchning:</span> Stage {company.fiscalYearError.betterMatch.stageYear} med Prod {company.fiscalYearError.betterMatch.prodYear}
+                          <span className="ml-2 text-green-2">(matchscore: {company.fiscalYearError.betterMatchScore})</span>
+                        </p>
+                        <p className="text-orange-2 mt-2">
+                          → Data från {company.fiscalYearError.betterMatch.stageYear} tolkades troligen som data från {company.fiscalYearError.originalComparison.stageYear}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             )}

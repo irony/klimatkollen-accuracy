@@ -83,6 +83,12 @@ export interface CompanyComparison {
     employees: { stage: number | null; prod: number | null };
     year: { stage: number | null; prod: number | null };
   };
+  fiscalYearError?: {
+    originalComparison: { stageYear: number; prodYear: number };
+    betterMatch: { stageYear: number; prodYear: number };
+    originalMatchScore: number;
+    betterMatchScore: number;
+  };
 }
 
 export interface QualityStats {
