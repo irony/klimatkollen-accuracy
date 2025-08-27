@@ -29,10 +29,10 @@ export default function DataQualityDashboard() {
       setLoading(true);
       
       console.log('DataQualityDashboard: Fetching from APIs...');
-      // Fetch from real APIs using proxy
+      // Fetch from real APIs directly
       const [stageResponse, prodResponse] = await Promise.all([
-        fetch('/api/stage/api/companies'),
-        fetch('/api/prod/api/companies')
+        fetch('https://stage-api.klimatkollen.se/api/companies'),
+        fetch('https://api.klimatkollen.se/api/companies')
       ]);
 
       if (!stageResponse.ok || !prodResponse.ok) {
