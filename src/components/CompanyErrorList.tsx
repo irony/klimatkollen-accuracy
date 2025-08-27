@@ -130,9 +130,23 @@ export default function CompanyErrorList({ errorCategory, companies, environment
                       </div>
                     ))}
                     
-                    <div className="flex justify-between text-xs text-grey font-semibold pt-2 border-t border-grey/20">
-                      <span>STAGE</span>
-                      <span>PROD</span>
+                    <div className="flex justify-between text-xs font-semibold pt-2 border-t border-grey/20">
+                      <a 
+                        href={`https://stage.klimatkollen.se/sv/companies/${company.companyId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-2 hover:text-blue-1 hover:underline"
+                      >
+                        STAGE
+                      </a>
+                      <a 
+                        href={`https://klimatkollen.se/sv/companies/${company.companyId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-2 hover:text-blue-1 hover:underline"
+                      >
+                        PROD
+                      </a>
                     </div>
                   </div>
                 );
