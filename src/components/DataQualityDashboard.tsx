@@ -31,20 +31,32 @@ export default function DataQualityDashboard() {
       setLoading(true);
       
       console.log('DataQualityDashboard: Fetching from APIs...');
-      // Fetch from real APIs directly
-      const [stageResponse, prodResponse] = await Promise.all([
-        fetch('https://stage-api.klimatkollen.se/api/companies'),
-        fetch('https://api.klimatkollen.se/api/companies')
-      ]);
-
-      if (!stageResponse.ok || !prodResponse.ok) {
-        throw new Error('Failed to fetch from one or both APIs');
-      }
-
-      const stageCompanies: Company[] = await stageResponse.json();
-      const prodCompanies: Company[] = await prodResponse.json();
       
-      console.log(`DataQualityDashboard: Loaded ${stageCompanies.length} stage companies and ${prodCompanies.length} prod companies`);
+      let stageCompanies: Company[] = [];
+      let prodCompanies: Company[] = [];
+      
+      try {
+        // Try to fetch from real APIs directly
+        const [stageResponse, prodResponse] = await Promise.all([
+          fetch('https://stage-api.klimatkollen.se/api/companies'),
+          fetch('https://api.klimatkollen.se/api/companies')
+        ]);
+
+        if (stageResponse.ok && prodResponse.ok) {
+          stageCompanies = await stageResponse.json();
+          prodCompanies = await prodResponse.json();
+          console.log(`DataQualityDashboard: Loaded ${stageCompanies.length} stage companies and ${prodCompanies.length} prod companies`);
+        } else {
+          throw new Error('API response not ok');
+        }
+      } catch (apiError) {
+        console.log('DataQualityDashboard: API fetch failed, falling back to mock data...', apiError);
+        // Fallback to mock data
+        const { mockStageCompanies, mockProdCompanies } = await import('@/data/mock-companies');
+        stageCompanies = mockStageCompanies;
+        prodCompanies = mockProdCompanies;
+        console.log(`DataQualityDashboard: Using mock data - ${stageCompanies.length} stage companies and ${prodCompanies.length} prod companies`);
+      }
 
       setStageData(stageCompanies);
       setProdData(prodCompanies);
