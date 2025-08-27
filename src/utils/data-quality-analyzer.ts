@@ -8,7 +8,7 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { type: 'scope3_major_error', description: 'Scope 3 stort fel (>20%)', color: '#aae506' }, // green-3
   { type: 'scope3_minor_error', description: 'Scope 3 litet fel (5-20%)', color: '#d5fd63' }, // green-2
   { type: 'currency_error', description: 'Fel valuta', color: '#59a0e1' }, // blue-3
-  { type: 'unit_error', description: 'Konsistent enhetsproblem (tusental)', color: '#99cfff' }, // blue-2
+  { type: 'unit_error', description: 'Enhetsfel (olika skalor)', color: '#99cfff' }, // blue-2
   { type: 'missing_year', description: 'Saknar år', color: '#97455d' }, // pink-4
   { type: 'revenue_major_error', description: 'Omsättning stort fel (>20%)', color: '#b25f00' }, // orange-4
   { type: 'revenue_minor_error', description: 'Omsättning litet fel (10-20%)', color: '#fde7ce' }, // orange-1
@@ -106,9 +106,19 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     totalPenalty += 5; // Stort värdefel - jämför fel år (5%)
   }
 
+  // Helper function to check if ratio indicates unit error (different scales)
+  function isUnitError(ratio: number): boolean {
+    // Check for various scale differences: 10x, 100x, 1000x, 10000x
+    const scalingFactors = [10, 100, 1000, 10000];
+    return scalingFactors.some(factor => 
+      (ratio > factor * 0.9 && ratio < factor * 1.1) || 
+      (ratio > (1/factor) * 0.9 && ratio < (1/factor) * 1.1)
+    );
+  }
+
   // Endast jämför numeriska värden om åren matchar (eller om prod saknar år)
   if (yearsMatch) {
-    // Först kolla om det finns konsistent enhetsproblem (tusental vs enheter)
+    // Första, kolla om det finns konsistent enhetsproblem över flera scope
     const ratios: number[] = [];
     const hasValues = { scope1: false, scope2: false, scope3: false };
     
@@ -125,10 +135,8 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       hasValues.scope3 = true;
     }
 
-    // Kolla om det finns konsistent tusental-problem (alla ratios omkring 1000 eller 0.001)
-    const hasConsistentUnitError = ratios.length >= 2 && ratios.every(ratio => 
-      (ratio > 900 && ratio < 1100) || (ratio > 0.0009 && ratio < 0.0011)
-    );
+    // Kolla om det finns konsistent enhetsproblem (alla ratios indikerar samma skalningsfaktor)
+    const hasConsistentUnitError = ratios.length >= 2 && ratios.every(ratio => isUnitError(ratio));
 
     if (hasConsistentUnitError) {
       // Lägg till ett enda enhetsproblem istället för individuella fel
@@ -143,13 +151,20 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
             totalPenalty += 1; // Saknar värde (1%)
           }
         } else if (prodScope1 !== null && prodScope1 !== undefined) {
-          const percentDiff = Math.abs(stageScope1 - prodScope1) / prodScope1;
-          if (percentDiff > 0.2) {
-            errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_major_error')!);
-            totalPenalty += 5; // Stort värdefel (5%)
-          } else if (percentDiff > 0.05) {
-            errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_minor_error')!);
-            totalPenalty += 2; // Litet fel (2%)
+          const ratio = Math.abs(stageScope1 / prodScope1);
+          if (isUnitError(ratio)) {
+            // Detta är troligen ett enhetsfel snarare än ett dataf
+            errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+            totalPenalty += 2; // Litet fel - tekniskt problem (2%)
+          } else {
+            const percentDiff = Math.abs(stageScope1 - prodScope1) / prodScope1;
+            if (percentDiff > 0.2) {
+              errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_major_error')!);
+              totalPenalty += 5; // Stort värdefel (5%)
+            } else if (percentDiff > 0.05) {
+              errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_minor_error')!);
+              totalPenalty += 2; // Litet fel (2%)
+            }
           }
         }
         // Om stage har scope 1 som saknas i prod - detta är OK (ingen penalty)
@@ -163,13 +178,22 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
             totalPenalty += 1; // Saknar värde (1%)
           }
         } else if (prodScope2 !== null && prodScope2 !== undefined) {
-          const percentDiff = Math.abs(stageScope2 - prodScope2) / prodScope2;
-          if (percentDiff > 0.2) {
-            errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_major_error')!);
-            totalPenalty += 5; // Stort värdefel (5%)
-          } else if (percentDiff > 0.05) {
-            errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_minor_error')!);
-            totalPenalty += 2; // Litet fel (2%)
+          const ratio = Math.abs(stageScope2 / prodScope2);
+          if (isUnitError(ratio)) {
+            // Detta är troligen ett enhetsfel snarare än ett datafel
+            if (!errors.some(e => e.type === 'unit_error')) {
+              errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+              totalPenalty += 2; // Litet fel - tekniskt problem (2%)
+            }
+          } else {
+            const percentDiff = Math.abs(stageScope2 - prodScope2) / prodScope2;
+            if (percentDiff > 0.2) {
+              errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_major_error')!);
+              totalPenalty += 5; // Stort värdefel (5%)
+            } else if (percentDiff > 0.05) {
+              errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_minor_error')!);
+              totalPenalty += 2; // Litet fel (2%)
+            }
           }
         }
         // Om stage har scope 2 som saknas i prod - detta är OK (ingen penalty)
@@ -183,13 +207,22 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
             totalPenalty += 1; // Saknar värde (1%)
           }
         } else if (prodScope3 !== null && prodScope3 !== undefined) {
-          const percentDiff = Math.abs(stageScope3 - prodScope3) / prodScope3;
-          if (percentDiff > 0.2) {
-            errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_major_error')!);
-            totalPenalty += 5; // Stort värdefel (5%)
-          } else if (percentDiff > 0.05) {
-            errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_minor_error')!);
-            totalPenalty += 2; // Litet fel (2%)
+          const ratio = Math.abs(stageScope3 / prodScope3);
+          if (isUnitError(ratio)) {
+            // Detta är troligen ett enhetsfel snarare än ett datafel
+            if (!errors.some(e => e.type === 'unit_error')) {
+              errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+              totalPenalty += 2; // Litet fel - tekniskt problem (2%)
+            }
+          } else {
+            const percentDiff = Math.abs(stageScope3 - prodScope3) / prodScope3;
+            if (percentDiff > 0.2) {
+              errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_major_error')!);
+              totalPenalty += 5; // Stort värdefel (5%)
+            } else if (percentDiff > 0.05) {
+              errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_minor_error')!);
+              totalPenalty += 2; // Litet fel (2%)
+            }
           }
         }
         // Om stage har scope 3 som saknas i prod - detta är OK (ingen penalty)
@@ -203,20 +236,22 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_revenue')!);
         totalPenalty += 1; // Saknar värde (1%)
       } else if (stageRevenue && prodRevenue) {
-        const difference = Math.abs(stageRevenue - prodRevenue) / prodRevenue;
-        if (difference >= 0.2) {
-          // Kolla om det är enhetsproblem (tusental vs miljoner)
-          const revenueRatio = Math.abs(stageRevenue / prodRevenue);
-          if (revenueRatio > 900 && revenueRatio < 1100) {
+        const revenueRatio = Math.abs(stageRevenue / prodRevenue);
+        if (isUnitError(revenueRatio)) {
+          // Detta är troligen ett enhetsfel snarare än ett datafel
+          if (!errors.some(e => e.type === 'unit_error')) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
             totalPenalty += 2; // Litet fel - tekniskt problem (2%)
-          } else {
+          }
+        } else {
+          const difference = Math.abs(stageRevenue - prodRevenue) / prodRevenue;
+          if (difference >= 0.2) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_major_error')!);
             totalPenalty += 5; // Stort värdefel (5%)
+          } else if (difference >= 0.1) {
+            errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_minor_error')!);
+            totalPenalty += 2; // Litet fel (2%)
           }
-        } else if (difference >= 0.1) {
-          errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_minor_error')!);
-          totalPenalty += 2; // Litet fel (2%)
         }
         // Under 10% skillnad räknas som OK (ingen penalty)
       }
