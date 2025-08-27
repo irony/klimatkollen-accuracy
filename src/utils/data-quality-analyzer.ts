@@ -93,24 +93,24 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   // Jämför scope 1
   if (stageScope1 === prodScope1) {
     correctFields++;
+  } else if (stageScope1 === null || stageScope1 === undefined) {
+    // Stage saknar scope 1 som finns i prod
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope1')!);
+  } else if (prodScope1 === null || prodScope1 === undefined) {
+    // Stage har scope 1 som saknas i prod - detta är OK
+    correctFields++;
   } else {
-    if (stageScope1 === null || stageScope1 === undefined) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope1')!);
-    } else if (prodScope1 === null || prodScope1 === undefined) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
+    const ratio = Math.abs(stageScope1 / prodScope1);
+    if (ratio > 900 && ratio < 1100) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
     } else {
-      const ratio = Math.abs(stageScope1 / prodScope1);
-      if (ratio > 900 && ratio < 1100) {
-        errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+      const percentDiff = Math.abs(stageScope1 - prodScope1) / prodScope1;
+      if (percentDiff > 0.2) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_major_error')!);
+      } else if (percentDiff > 0.05) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_minor_error')!);
       } else {
-        const percentDiff = Math.abs(stageScope1 - prodScope1) / prodScope1;
-        if (percentDiff > 0.2) {
-          errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_major_error')!);
-        } else if (percentDiff > 0.05) {
-          errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_minor_error')!);
-        } else {
-          correctFields++; // Inom 5% acceptabelt
-        }
+        correctFields++; // Inom 5% acceptabelt
       }
     }
   }
@@ -118,24 +118,24 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   // Jämför scope 2
   if (stageScope2 === prodScope2) {
     correctFields++;
+  } else if (stageScope2 === null || stageScope2 === undefined) {
+    // Stage saknar scope 2 som finns i prod
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope2')!);
+  } else if (prodScope2 === null || prodScope2 === undefined) {
+    // Stage har scope 2 som saknas i prod - detta är OK
+    correctFields++;
   } else {
-    if (stageScope2 === null || stageScope2 === undefined) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope2')!);
-    } else if (prodScope2 === null || prodScope2 === undefined) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
+    const ratio = Math.abs(stageScope2 / prodScope2);
+    if (ratio > 900 && ratio < 1100) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
     } else {
-      const ratio = Math.abs(stageScope2 / prodScope2);
-      if (ratio > 900 && ratio < 1100) {
-        errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+      const percentDiff = Math.abs(stageScope2 - prodScope2) / prodScope2;
+      if (percentDiff > 0.2) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_major_error')!);
+      } else if (percentDiff > 0.05) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_minor_error')!);
       } else {
-        const percentDiff = Math.abs(stageScope2 - prodScope2) / prodScope2;
-        if (percentDiff > 0.2) {
-          errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_major_error')!);
-        } else if (percentDiff > 0.05) {
-          errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_minor_error')!);
-        } else {
-          correctFields++; // Inom 5% acceptabelt
-        }
+        correctFields++; // Inom 5% acceptabelt
       }
     }
   }
@@ -143,24 +143,24 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   // Jämför scope 3
   if (stageScope3 === prodScope3) {
     correctFields++;
+  } else if (stageScope3 === null || stageScope3 === undefined) {
+    // Stage saknar scope 3 som finns i prod
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope3')!);
+  } else if (prodScope3 === null || prodScope3 === undefined) {
+    // Stage har scope 3 som saknas i prod - detta är OK
+    correctFields++;
   } else {
-    if (stageScope3 === null || stageScope3 === undefined) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope3')!);
-    } else if (prodScope3 === null || prodScope3 === undefined) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
+    const ratio = Math.abs(stageScope3 / prodScope3);
+    if (ratio > 900 && ratio < 1100) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
     } else {
-      const ratio = Math.abs(stageScope3 / prodScope3);
-      if (ratio > 900 && ratio < 1100) {
-        errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+      const percentDiff = Math.abs(stageScope3 - prodScope3) / prodScope3;
+      if (percentDiff > 0.2) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_major_error')!);
+      } else if (percentDiff > 0.05) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_minor_error')!);
       } else {
-        const percentDiff = Math.abs(stageScope3 - prodScope3) / prodScope3;
-        if (percentDiff > 0.2) {
-          errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_major_error')!);
-        } else if (percentDiff > 0.05) {
-          errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_minor_error')!);
-        } else {
-          correctFields++; // Inom 5% acceptabelt
-        }
+        correctFields++; // Inom 5% acceptabelt
       }
     }
   }
@@ -168,70 +168,74 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   // Jämför valuta
   if (stageCurrency === prodCurrency) {
     correctFields++;
+  } else if (!stageCurrency && prodCurrency) {
+    // Stage saknar data som finns i prod - detta är ett fel
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'currency_error')!);
+  } else if (stageCurrency && !prodCurrency) {
+    // Stage har data som saknas i prod - detta är OK, räkna som korrekt
+    correctFields++;
   } else {
+    // Båda har värden men de skiljer sig
     errors.push(ERROR_CATEGORIES.find(e => e.type === 'currency_error')!);
   }
 
   // Kontrollera år
   if (stageYear === prodYear) {
     correctFields++;
+  } else if (!stageYear && prodYear) {
+    // Stage saknar år som finns i prod
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_year')!);
+  } else if (stageYear && !prodYear) {
+    // Stage har år som saknas i prod - detta är OK
+    correctFields++;
   } else {
-    if (!stageYear && prodYear) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_year')!);
-    } else if (stageYear && !prodYear) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
-    } else {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'year_mismatch')!);
-    }
+    // Båda har år men de skiljer sig
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'year_mismatch')!);
   }
 
   // Kontrollera omsättning
   if (stageRevenue === prodRevenue) {
     correctFields++;
-  } else {
-    if (!stageRevenue && prodRevenue) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_revenue')!);
-    } else if (stageRevenue && !prodRevenue) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
-    } else if (stageRevenue && prodRevenue) {
-      const difference = Math.abs(stageRevenue - prodRevenue) / prodRevenue;
-      if (difference < 0.1) {
-        correctFields++; // Inom 10% acceptabelt
-      } else if (difference < 0.2) {
-        errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_minor_error')!);
-      } else {
-        // Kolla om det är enhetsproblem (tusental vs miljoner)
-        const revenueRatio = Math.abs(stageRevenue / prodRevenue);
-        if (revenueRatio > 900 && revenueRatio < 1100) {
-          errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
-        } else {
-          errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_major_error')!);
-        }
-      }
+  } else if (!stageRevenue && prodRevenue) {
+    // Stage saknar omsättning som finns i prod
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_revenue')!);
+  } else if (stageRevenue && !prodRevenue) {
+    // Stage har omsättning som saknas i prod - detta är OK
+    correctFields++;
+  } else if (stageRevenue && prodRevenue) {
+    const difference = Math.abs(stageRevenue - prodRevenue) / prodRevenue;
+    if (difference < 0.1) {
+      correctFields++; // Inom 10% acceptabelt
+    } else if (difference < 0.2) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_minor_error')!);
     } else {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
+      // Kolla om det är enhetsproblem (tusental vs miljoner)
+      const revenueRatio = Math.abs(stageRevenue / prodRevenue);
+      if (revenueRatio > 900 && revenueRatio < 1100) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+      } else {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_major_error')!);
+      }
     }
   }
 
   // Kontrollera anställda
   if (stageEmployees === prodEmployees) {
     correctFields++;
-  } else {
-    if (!stageEmployees && prodEmployees) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_employees')!);
-    } else if (stageEmployees && !prodEmployees) {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
-    } else if (stageEmployees && prodEmployees) {
-      const difference = Math.abs(stageEmployees - prodEmployees) / prodEmployees;
-      if (difference < 0.1) {
-        correctFields++; // Inom 10% acceptabelt
-      } else if (difference < 0.2) {
-        errors.push(ERROR_CATEGORIES.find(e => e.type === 'employees_minor_error')!);
-      } else {
-        errors.push(ERROR_CATEGORIES.find(e => e.type === 'employees_major_error')!);
-      }
+  } else if (!stageEmployees && prodEmployees) {
+    // Stage saknar anställda som finns i prod
+    errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_employees')!);
+  } else if (stageEmployees && !prodEmployees) {
+    // Stage har anställda som saknas i prod - detta är OK
+    correctFields++;
+  } else if (stageEmployees && prodEmployees) {
+    const difference = Math.abs(stageEmployees - prodEmployees) / prodEmployees;
+    if (difference < 0.1) {
+      correctFields++; // Inom 10% acceptabelt
+    } else if (difference < 0.2) {
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'employees_minor_error')!);
     } else {
-      errors.push(ERROR_CATEGORIES.find(e => e.type === 'data_structure_error')!);
+      errors.push(ERROR_CATEGORIES.find(e => e.type === 'employees_major_error')!);
     }
   }
 
