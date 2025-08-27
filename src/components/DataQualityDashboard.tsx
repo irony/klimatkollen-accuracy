@@ -240,6 +240,15 @@ export default function DataQualityDashboard() {
                               );
                               return companiesWithError.length > 0;
                             })
+                            .sort((a, b) => {
+                              const companiesWithErrorA = comparisons.filter(comp => 
+                                comp.errors.some(error => error.type === a.type)
+                              ).length;
+                              const companiesWithErrorB = comparisons.filter(comp => 
+                                comp.errors.some(error => error.type === b.type)
+                              ).length;
+                              return companiesWithErrorB - companiesWithErrorA; // Sort descending (most errors first)
+                            })
                              .map(category => (
                                <div 
                                  key={category.type}
