@@ -41,6 +41,8 @@ export default function DataQualityDashboard() {
 
       const stageCompanies: Company[] = await stageResponse.json();
       const prodCompanies: Company[] = await prodResponse.json();
+      
+      console.log(`DataQualityDashboard: Loaded ${stageCompanies.length} stage companies and ${prodCompanies.length} prod companies`);
 
       setStageData(stageCompanies);
       setProdData(prodCompanies);

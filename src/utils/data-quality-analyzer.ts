@@ -302,7 +302,7 @@ export function generateQualityStats(comparisons: CompanyComparison[]): QualityS
 
   return {
     totalCompanies,
-    averageCorrectness: Math.round(averageCorrectness * 100) / 100,
+    averageCorrectness,
     errorDistribution,
     correctnessHistogram: histogram,
   };
