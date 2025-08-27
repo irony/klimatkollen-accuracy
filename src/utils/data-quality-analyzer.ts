@@ -79,11 +79,11 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     if (!stageCurrency && prodCurrency) {
       // Stage saknar data som finns i prod - detta är ett fel
       errors.push(ERROR_CATEGORIES.find(e => e.type === 'currency_error')!);
-      totalPenalty += 2; // Mellanstort fel
+      totalPenalty += 1; // Saknar värde (1%)
     } else if (stageCurrency && prodCurrency) {
       // Båda har värden men de skiljer sig
       errors.push(ERROR_CATEGORIES.find(e => e.type === 'currency_error')!);
-      totalPenalty += 2; // Mellanstort fel
+      totalPenalty += 2; // Fel värde (2%)
     }
     // Om stage har data som prod saknar räknas det som OK (ingen penalty)
   }
@@ -95,14 +95,14 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
   } else if (!stageYear && prodYear) {
     // Stage saknar år som finns i prod
     errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_year')!);
-    totalPenalty += 3; // Stort fel - saknar kritisk information
+    totalPenalty += 1; // Saknar värde (1%)
   } else if (stageYear && !prodYear) {
     // Stage har år som saknas i prod - detta är OK
     yearsMatch = true; // Kan fortfarande jämföra data
   } else {
     // Båda har år men de skiljer sig
     errors.push(ERROR_CATEGORIES.find(e => e.type === 'year_mismatch')!);
-    totalPenalty += 3; // Stort fel - jämför fel år
+    totalPenalty += 5; // Stort värdefel - jämför fel år (5%)
   }
 
   // Endast jämför numeriska värden om åren matchar (eller om prod saknar år)
@@ -132,23 +132,23 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     if (hasConsistentUnitError) {
       // Lägg till ett enda enhetsproblem istället för individuella fel
       errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
-      totalPenalty += 2; // Mellanstort fel - tekniskt problem men rätt värden
+      totalPenalty += 2; // Litet fel - tekniskt problem men rätt värden (2%)
     } else {
       // Jämför scope 1
       if (stageScope1 !== prodScope1) {
         if (stageScope1 === null || stageScope1 === undefined) {
           if (prodScope1 !== null && prodScope1 !== undefined) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope1')!);
-            totalPenalty += 3; // Stort fel - saknar viktig data
+            totalPenalty += 1; // Saknar värde (1%)
           }
         } else if (prodScope1 !== null && prodScope1 !== undefined) {
           const percentDiff = Math.abs(stageScope1 - prodScope1) / prodScope1;
           if (percentDiff > 0.2) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_major_error')!);
-            totalPenalty += 1; // Stort fel (1%)
+            totalPenalty += 5; // Stort värdefel (5%)
           } else if (percentDiff > 0.05) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope1_minor_error')!);
-            totalPenalty += 0.5; // Litet fel (0.5%)
+            totalPenalty += 2; // Litet fel (2%)
           }
         }
         // Om stage har scope 1 som saknas i prod - detta är OK (ingen penalty)
@@ -159,16 +159,16 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
         if (stageScope2 === null || stageScope2 === undefined) {
           if (prodScope2 !== null && prodScope2 !== undefined) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope2')!);
-            totalPenalty += 3; // Stort fel - saknar viktig data
+            totalPenalty += 1; // Saknar värde (1%)
           }
         } else if (prodScope2 !== null && prodScope2 !== undefined) {
           const percentDiff = Math.abs(stageScope2 - prodScope2) / prodScope2;
           if (percentDiff > 0.2) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_major_error')!);
-            totalPenalty += 1; // Stort fel (1%)
+            totalPenalty += 5; // Stort värdefel (5%)
           } else if (percentDiff > 0.05) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope2_minor_error')!);
-            totalPenalty += 0.5; // Litet fel (0.5%)
+            totalPenalty += 2; // Litet fel (2%)
           }
         }
         // Om stage har scope 2 som saknas i prod - detta är OK (ingen penalty)
@@ -179,16 +179,16 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
         if (stageScope3 === null || stageScope3 === undefined) {
           if (prodScope3 !== null && prodScope3 !== undefined) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope3')!);
-            totalPenalty += 3; // Stort fel - saknar viktig data
+            totalPenalty += 1; // Saknar värde (1%)
           }
         } else if (prodScope3 !== null && prodScope3 !== undefined) {
           const percentDiff = Math.abs(stageScope3 - prodScope3) / prodScope3;
           if (percentDiff > 0.2) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_major_error')!);
-            totalPenalty += 1; // Stort fel (1%)
+            totalPenalty += 5; // Stort värdefel (5%)
           } else if (percentDiff > 0.05) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'scope3_minor_error')!);
-            totalPenalty += 0.5; // Litet fel (0.5%)
+            totalPenalty += 2; // Litet fel (2%)
           }
         }
         // Om stage har scope 3 som saknas i prod - detta är OK (ingen penalty)
@@ -200,7 +200,7 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       if (!stageRevenue && prodRevenue) {
         // Stage saknar omsättning som finns i prod
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_revenue')!);
-        totalPenalty += 2; // Mellanstort fel
+        totalPenalty += 1; // Saknar värde (1%)
       } else if (stageRevenue && prodRevenue) {
         const difference = Math.abs(stageRevenue - prodRevenue) / prodRevenue;
         if (difference >= 0.2) {
@@ -208,14 +208,14 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
           const revenueRatio = Math.abs(stageRevenue / prodRevenue);
           if (revenueRatio > 900 && revenueRatio < 1100) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
-            totalPenalty += 2; // Mellanstort fel - tekniskt problem
+            totalPenalty += 2; // Litet fel - tekniskt problem (2%)
           } else {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_major_error')!);
-            totalPenalty += 1; // Stort fel (1%)
+            totalPenalty += 5; // Stort värdefel (5%)
           }
         } else if (difference >= 0.1) {
           errors.push(ERROR_CATEGORIES.find(e => e.type === 'revenue_minor_error')!);
-          totalPenalty += 0.5; // Litet fel (0.5%)
+          totalPenalty += 2; // Litet fel (2%)
         }
         // Under 10% skillnad räknas som OK (ingen penalty)
       }
@@ -227,15 +227,15 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       if (!stageEmployees && prodEmployees) {
         // Stage saknar anställda som finns i prod
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_employees')!);
-        totalPenalty += 2; // Mellanstort fel
+        totalPenalty += 1; // Saknar värde (1%)
       } else if (stageEmployees && prodEmployees) {
         const difference = Math.abs(stageEmployees - prodEmployees) / prodEmployees;
         if (difference >= 0.2) {
           errors.push(ERROR_CATEGORIES.find(e => e.type === 'employees_major_error')!);
-          totalPenalty += 1; // Stort fel (1%)
+          totalPenalty += 5; // Stort värdefel (5%)
         } else if (difference >= 0.1) {
           errors.push(ERROR_CATEGORIES.find(e => e.type === 'employees_minor_error')!);
-          totalPenalty += 0.5; // Litet fel (0.5%)
+          totalPenalty += 2; // Litet fel (2%)
         }
         // Under 10% skillnad räknas som OK (ingen penalty)
       }
