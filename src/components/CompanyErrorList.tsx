@@ -46,34 +46,68 @@ export default function CompanyErrorList({ errorCategory, companies, environment
             {companiesWithError.slice(0, 10).map((company) => {
               const getErrorDetails = (errorType: string) => {
                 const details = company.comparisonDetails;
-                switch (errorType) {
-                  case 'scope1_major_error':
-                  case 'scope1_minor_error':
-                  case 'missing_scope1':
-                    return `Scope 1: Stage ${details.scope1.stage ?? 'saknas'} vs Prod ${details.scope1.prod ?? 'saknas'}`;
-                  case 'scope2_major_error':
-                  case 'scope2_minor_error':
-                  case 'missing_scope2':
-                    return `Scope 2: Stage ${details.scope2.stage ?? 'saknas'} vs Prod ${details.scope2.prod ?? 'saknas'}`;
-                  case 'scope3_major_error':
-                  case 'scope3_minor_error':
-                  case 'missing_scope3':
-                    return `Scope 3: Stage ${details.scope3.stage ?? 'saknas'} vs Prod ${details.scope3.prod ?? 'saknas'}`;
-                  case 'revenue_major_error':
-                  case 'revenue_minor_error':
-                  case 'missing_revenue':
-                    return `Omsättning: Stage ${details.revenue.stage ?? 'saknas'} vs Prod ${details.revenue.prod ?? 'saknas'}`;
-                  case 'employees_major_error':
-                  case 'employees_minor_error':
-                  case 'missing_employees':
-                    return `Anställda: Stage ${details.employees.stage ?? 'saknas'} vs Prod ${details.employees.prod ?? 'saknas'}`;
-                  case 'currency_error':
-                    return `Valuta: Stage ${details.currency.stage ?? 'saknas'} vs Prod ${details.currency.prod ?? 'saknas'}`;
-                  case 'year_mismatch':
-                    return `År: Stage ${details.year.stage ?? 'saknas'} vs Prod ${details.year.prod ?? 'saknas'}`;
-                  default:
-                    return null;
-                }
+                const isCurrentError = (field: string) => {
+                  return (
+                    (errorType.includes('scope1') && field === 'scope1') ||
+                    (errorType.includes('scope2') && field === 'scope2') ||
+                    (errorType.includes('scope3') && field === 'scope3') ||
+                    (errorType.includes('revenue') && field === 'revenue') ||
+                    (errorType.includes('employees') && field === 'employees') ||
+                    (errorType.includes('currency') && field === 'currency') ||
+                    (errorType.includes('year') && field === 'year')
+                  );
+                };
+
+                return (
+                  <div className="space-y-3">
+                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('scope1') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
+                      <span className="font-mono text-lg text-white">{details.scope1.stage ?? 'saknas'}</span>
+                      <span className="text-sm text-grey font-medium">-- Scope 1 --</span>
+                      <span className="font-mono text-lg text-white">{details.scope1.prod ?? 'saknas'}</span>
+                    </div>
+                    
+                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('scope2') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
+                      <span className="font-mono text-lg text-white">{details.scope2.stage ?? 'saknas'}</span>
+                      <span className="text-sm text-grey font-medium">-- Scope 2 --</span>
+                      <span className="font-mono text-lg text-white">{details.scope2.prod ?? 'saknas'}</span>
+                    </div>
+                    
+                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('scope3') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
+                      <span className="font-mono text-lg text-white">{details.scope3.stage ?? 'saknas'}</span>
+                      <span className="text-sm text-grey font-medium">-- Scope 3 --</span>
+                      <span className="font-mono text-lg text-white">{details.scope3.prod ?? 'saknas'}</span>
+                    </div>
+                    
+                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('revenue') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
+                      <span className="font-mono text-lg text-white">{details.revenue.stage ?? 'saknas'}</span>
+                      <span className="text-sm text-grey font-medium">-- Omsättning --</span>
+                      <span className="font-mono text-lg text-white">{details.revenue.prod ?? 'saknas'}</span>
+                    </div>
+                    
+                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('employees') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
+                      <span className="font-mono text-lg text-white">{details.employees.stage ?? 'saknas'}</span>
+                      <span className="text-sm text-grey font-medium">-- Anställda --</span>
+                      <span className="font-mono text-lg text-white">{details.employees.prod ?? 'saknas'}</span>
+                    </div>
+                    
+                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('currency') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
+                      <span className="font-mono text-lg text-white">{details.currency.stage ?? 'saknas'}</span>
+                      <span className="text-sm text-grey font-medium">-- Valuta --</span>
+                      <span className="font-mono text-lg text-white">{details.currency.prod ?? 'saknas'}</span>
+                    </div>
+                    
+                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('year') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
+                      <span className="font-mono text-lg text-white">{details.year.stage ?? 'saknas'}</span>
+                      <span className="text-sm text-grey font-medium">-- År --</span>
+                      <span className="font-mono text-lg text-white">{details.year.prod ?? 'saknas'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-xs text-grey font-semibold pt-2 border-t border-grey/20">
+                      <span>STAGE</span>
+                      <span>PROD</span>
+                    </div>
+                  </div>
+                );
               };
 
               const relevantError = company.errors.find(error => error.type === errorCategory.type);
@@ -107,7 +141,7 @@ export default function CompanyErrorList({ errorCategory, companies, environment
                     </Button>
                   </div>
                   {errorDetail && (
-                    <div className="text-sm font-mono text-white bg-black-1 p-3 rounded border-l-2 border-red-500">
+                    <div className="bg-black-1 p-4 rounded-lg border">
                       {errorDetail}
                     </div>
                   )}
