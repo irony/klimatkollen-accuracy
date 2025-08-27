@@ -46,61 +46,89 @@ export default function CompanyErrorList({ errorCategory, companies, environment
             {companiesWithError.slice(0, 10).map((company) => {
               const getErrorDetails = (errorType: string) => {
                 const details = company.comparisonDetails;
-                const isCurrentError = (field: string) => {
-                  return (
-                    (errorType.includes('scope1') && field === 'scope1') ||
-                    (errorType.includes('scope2') && field === 'scope2') ||
-                    (errorType.includes('scope3') && field === 'scope3') ||
-                    (errorType.includes('revenue') && field === 'revenue') ||
-                    (errorType.includes('employees') && field === 'employees') ||
-                    (errorType.includes('currency') && field === 'currency') ||
-                    (errorType.includes('year') && field === 'year')
-                  );
-                };
+                const companyErrors = company.errors;
+                
+                const errorFields = [];
+                
+                // Only show fields that have errors for this company
+                companyErrors.forEach(error => {
+                  const isCurrentError = error.type === errorType;
+                  
+                  if (error.type.includes('scope1')) {
+                    errorFields.push({
+                      field: 'scope1',
+                      label: '-- Scope 1 --',
+                      stage: details.scope1.stage ?? 'saknas',
+                      prod: details.scope1.prod ?? 'saknas',
+                      highlight: isCurrentError
+                    });
+                  } else if (error.type.includes('scope2')) {
+                    errorFields.push({
+                      field: 'scope2', 
+                      label: '-- Scope 2 --',
+                      stage: details.scope2.stage ?? 'saknas',
+                      prod: details.scope2.prod ?? 'saknas',
+                      highlight: isCurrentError
+                    });
+                  } else if (error.type.includes('scope3')) {
+                    errorFields.push({
+                      field: 'scope3',
+                      label: '-- Scope 3 --', 
+                      stage: details.scope3.stage ?? 'saknas',
+                      prod: details.scope3.prod ?? 'saknas',
+                      highlight: isCurrentError
+                    });
+                  } else if (error.type.includes('revenue')) {
+                    errorFields.push({
+                      field: 'revenue',
+                      label: '-- Omsättning --',
+                      stage: details.revenue.stage ?? 'saknas',
+                      prod: details.revenue.prod ?? 'saknas', 
+                      highlight: isCurrentError
+                    });
+                  } else if (error.type.includes('employees')) {
+                    errorFields.push({
+                      field: 'employees',
+                      label: '-- Anställda --',
+                      stage: details.employees.stage ?? 'saknas',
+                      prod: details.employees.prod ?? 'saknas',
+                      highlight: isCurrentError
+                    });
+                  } else if (error.type.includes('currency')) {
+                    errorFields.push({
+                      field: 'currency',
+                      label: '-- Valuta --',
+                      stage: details.currency.stage ?? 'saknas',
+                      prod: details.currency.prod ?? 'saknas',
+                      highlight: isCurrentError
+                    });
+                  } else if (error.type.includes('year')) {
+                    errorFields.push({
+                      field: 'year',
+                      label: '-- År --',
+                      stage: details.year.stage ?? 'saknas', 
+                      prod: details.year.prod ?? 'saknas',
+                      highlight: isCurrentError
+                    });
+                  }
+                });
+
+                // Remove duplicates based on field
+                const uniqueErrorFields = errorFields.filter((field, index, self) => 
+                  index === self.findIndex(f => f.field === field.field)
+                );
+
+                if (uniqueErrorFields.length === 0) return null;
 
                 return (
                   <div className="space-y-3">
-                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('scope1') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
-                      <span className="font-mono text-lg text-white">{details.scope1.stage ?? 'saknas'}</span>
-                      <span className="text-sm text-grey font-medium">-- Scope 1 --</span>
-                      <span className="font-mono text-lg text-white">{details.scope1.prod ?? 'saknas'}</span>
-                    </div>
-                    
-                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('scope2') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
-                      <span className="font-mono text-lg text-white">{details.scope2.stage ?? 'saknas'}</span>
-                      <span className="text-sm text-grey font-medium">-- Scope 2 --</span>
-                      <span className="font-mono text-lg text-white">{details.scope2.prod ?? 'saknas'}</span>
-                    </div>
-                    
-                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('scope3') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
-                      <span className="font-mono text-lg text-white">{details.scope3.stage ?? 'saknas'}</span>
-                      <span className="text-sm text-grey font-medium">-- Scope 3 --</span>
-                      <span className="font-mono text-lg text-white">{details.scope3.prod ?? 'saknas'}</span>
-                    </div>
-                    
-                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('revenue') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
-                      <span className="font-mono text-lg text-white">{details.revenue.stage ?? 'saknas'}</span>
-                      <span className="text-sm text-grey font-medium">-- Omsättning --</span>
-                      <span className="font-mono text-lg text-white">{details.revenue.prod ?? 'saknas'}</span>
-                    </div>
-                    
-                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('employees') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
-                      <span className="font-mono text-lg text-white">{details.employees.stage ?? 'saknas'}</span>
-                      <span className="text-sm text-grey font-medium">-- Anställda --</span>
-                      <span className="font-mono text-lg text-white">{details.employees.prod ?? 'saknas'}</span>
-                    </div>
-                    
-                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('currency') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
-                      <span className="font-mono text-lg text-white">{details.currency.stage ?? 'saknas'}</span>
-                      <span className="text-sm text-grey font-medium">-- Valuta --</span>
-                      <span className="font-mono text-lg text-white">{details.currency.prod ?? 'saknas'}</span>
-                    </div>
-                    
-                    <div className={`flex justify-between items-center p-2 rounded ${isCurrentError('year') ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
-                      <span className="font-mono text-lg text-white">{details.year.stage ?? 'saknas'}</span>
-                      <span className="text-sm text-grey font-medium">-- År --</span>
-                      <span className="font-mono text-lg text-white">{details.year.prod ?? 'saknas'}</span>
-                    </div>
+                    {uniqueErrorFields.map((errorField) => (
+                      <div key={errorField.field} className={`flex justify-between items-center p-2 rounded ${errorField.highlight ? 'bg-red-500/20 border border-red-500/50' : 'bg-black-1/50'}`}>
+                        <span className="font-mono text-lg text-white">{errorField.stage}</span>
+                        <span className="text-sm text-grey font-medium">{errorField.label}</span>
+                        <span className="font-mono text-lg text-white">{errorField.prod}</span>
+                      </div>
+                    ))}
                     
                     <div className="flex justify-between text-xs text-grey font-semibold pt-2 border-t border-grey/20">
                       <span>STAGE</span>
