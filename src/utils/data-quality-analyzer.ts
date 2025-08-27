@@ -20,6 +20,7 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { type: 'missing_revenue', description: 'Saknar omsättning', color: '#13364e' }, // blue-5
   { type: 'missing_employees', description: 'Saknar anställda', color: '#878787' }, // grey
   { type: 'year_mismatch', description: 'Fel rapportår', color: '#6c9105' }, // green-4
+  { type: 'wrong_fiscal_year', description: 'Fel räkenskapsår (data från annat år)', color: '#8b4513' }, // brown
   { type: 'data_structure_error', description: 'Strukturfel i data', color: '#878787' }, // grey
   { type: 'other', description: 'Annat fel', color: '#878787' }, // grey
   { type: 'perfect', description: 'Inga fel (100%)', color: '#4CAF50' }, // bright green
@@ -279,6 +280,89 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     }
   }
   // Om åren inte matchar hoppar vi över numeriska jämförelser (ingen penalty för detta)
+
+  // Kolla om det finns fel räkenskapsår - data från ett år har rapporterats som data från ett annat år
+  if (stageCompany.reportingPeriods.length > 1 || prodCompany.reportingPeriods.length > 1) {
+    // Få alla rapportperioder med data för båda företagen
+    const stagePeriodsWithData = stageCompany.reportingPeriods.filter(p => p.emissions || p.economy);
+    const prodPeriodsWithData = prodCompany.reportingPeriods.filter(p => p.emissions || p.economy);
+    
+    if (stagePeriodsWithData.length > 0 && prodPeriodsWithData.length > 0) {
+      // Jämför alla möjliga kombinationer av år för att hitta bättre matchningar
+      let bestMatch = { stageYear: stageYear, prodYear: prodYear, matchScore: 0 };
+      let currentMatchScore = 0;
+      
+      // Beräkna matchscore för nuvarande årjämförelse
+      if (stageScope1 && prodScope1) {
+        const diff = Math.abs(stageScope1 - prodScope1) / prodScope1;
+        if (diff < 0.05) currentMatchScore += 3;
+        else if (diff < 0.2) currentMatchScore += 1;
+      }
+      if (stageScope2 && prodScope2) {
+        const diff = Math.abs(stageScope2 - prodScope2) / prodScope2;
+        if (diff < 0.05) currentMatchScore += 3;
+        else if (diff < 0.2) currentMatchScore += 1;
+      }
+      if (stageScope3 && prodScope3) {
+        const diff = Math.abs(stageScope3 - prodScope3) / prodScope3;
+        if (diff < 0.05) currentMatchScore += 3;
+        else if (diff < 0.2) currentMatchScore += 1;
+      }
+      
+      bestMatch.matchScore = currentMatchScore;
+      
+      // Testa alla andra kombinationer
+      for (const stagePeriod of stagePeriodsWithData) {
+        for (const prodPeriod of prodPeriodsWithData) {
+          const testStageYear = new Date(stagePeriod.startDate).getFullYear();
+          const testProdYear = new Date(prodPeriod.startDate).getFullYear();
+          
+          // Hoppa över redan testade kombinationen
+          if (testStageYear === stageYear && testProdYear === prodYear) continue;
+          
+          const testStageScope1 = stagePeriod.emissions?.scope1?.total;
+          const testProdScope1 = prodPeriod.emissions?.scope1?.total;
+          const testStageScope2 = stagePeriod.emissions?.scope2?.calculatedTotalEmissions || stagePeriod.emissions?.scope2?.mb;
+          const testProdScope2 = prodPeriod.emissions?.scope2?.calculatedTotalEmissions || prodPeriod.emissions?.scope2?.mb;
+          const testStageScope3 = stagePeriod.emissions?.scope3?.calculatedTotalEmissions;
+          const testProdScope3 = prodPeriod.emissions?.scope3?.calculatedTotalEmissions;
+          
+          let testMatchScore = 0;
+          
+          if (testStageScope1 && testProdScope1) {
+            const diff = Math.abs(testStageScope1 - testProdScope1) / testProdScope1;
+            if (diff < 0.05) testMatchScore += 3;
+            else if (diff < 0.2) testMatchScore += 1;
+          }
+          if (testStageScope2 && testProdScope2) {
+            const diff = Math.abs(testStageScope2 - testProdScope2) / testProdScope2;
+            if (diff < 0.05) testMatchScore += 3;
+            else if (diff < 0.2) testMatchScore += 1;
+          }
+          if (testStageScope3 && testProdScope3) {
+            const diff = Math.abs(testStageScope3 - testProdScope3) / testProdScope3;
+            if (diff < 0.05) testMatchScore += 3;
+            else if (diff < 0.2) testMatchScore += 1;
+          }
+          
+          // Om denna kombination ger betydligt bättre matchning, är det troligen fel räkenskapsår
+          if (testMatchScore > bestMatch.matchScore + 2) { // Kräv betydlig förbättring
+            bestMatch = { 
+              stageYear: testStageYear, 
+              prodYear: testProdYear, 
+              matchScore: testMatchScore 
+            };
+          }
+        }
+      }
+      
+      // Om bästa matchningen inte är den ursprungliga års-kombinationen, rapportera fel
+      if (bestMatch.stageYear !== stageYear || bestMatch.prodYear !== prodYear) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'wrong_fiscal_year')!);
+        totalPenalty += 3; // Måttligt fel - rätt data men fel år (3%)
+      }
+    }
+  }
 
   // Beräkna noggrannhet baserat på viktade fel (100% - totalt straff)
   const correctnessPercentage = Math.max(0, Math.round(100 - totalPenalty));
