@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,6 +19,7 @@ export default function DataQualityDashboard() {
   const [qualityStats, setQualityStats] = useState<QualityStats | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const errorSectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
     console.log('DataQualityDashboard: useEffect running, calling fetchData...');
@@ -114,6 +115,13 @@ export default function DataQualityDashboard() {
       };
       return acc;
     }, {} as Record<string, { label: string; color: string }>)
+  };
+
+  const scrollToErrorCategory = (categoryType: string) => {
+    const element = errorSectionRefs.current[categoryType];
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
   const errorChartData = ERROR_CATEGORIES.map(category => ({
@@ -228,15 +236,19 @@ export default function DataQualityDashboard() {
                               );
                               return companiesWithError.length > 0;
                             })
-                            .map(category => (
-                              <CompanyErrorList
-                                key={category.type}
-                                errorCategory={category}
-                                companies={comparisons}
-                                environment="stage"
-                              />
-                            ))}
-                        </div>
+                             .map(category => (
+                               <div 
+                                 key={category.type}
+                                 ref={el => errorSectionRefs.current[category.type] = el}
+                               >
+                                 <CompanyErrorList
+                                   errorCategory={category}
+                                   companies={comparisons}
+                                   environment="stage"
+                                 />
+                               </div>
+                             ))}
+                         </div>
                       </div>
                     </TabsContent>
 
@@ -245,18 +257,28 @@ export default function DataQualityDashboard() {
                         <ChartContainer config={chartConfig} className="w-full h-full">
                           <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
-                              <Pie
+                               <Pie
                                 data={errorChartData}
                                 cx="50%"
                                 cy="50%"
                                 outerRadius={120}
                                 dataKey="count"
                                 label={({ category, count }) => `${category}: ${count}`}
-                              >
-                                {errorChartData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </Pie>
+                                onClick={(data) => {
+                                  const categoryType = ERROR_CATEGORIES.find(cat => cat.description === data.category)?.type;
+                                  if (categoryType) {
+                                    scrollToErrorCategory(categoryType);
+                                  }
+                                }}
+                               >
+                                 {errorChartData.map((entry, index) => (
+                                   <Cell 
+                                     key={`cell-${index}`} 
+                                     fill={entry.color}
+                                     className="cursor-pointer hover:opacity-80 transition-opacity"
+                                   />
+                                 ))}
+                               </Pie>
                               <ChartTooltip content={<ChartTooltipContent />} />
                             </PieChart>
                           </ResponsiveContainer>
