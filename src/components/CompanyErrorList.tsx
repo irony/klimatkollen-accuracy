@@ -107,7 +107,7 @@ export default function CompanyErrorList({ errorCategory, companies, environment
                     </Button>
                   </div>
                   {errorDetail && (
-                    <div className="text-xs text-grey bg-black-1 p-2 rounded border-l-2 border-red-500">
+                    <div className="text-sm font-mono text-white bg-black-1 p-3 rounded border-l-2 border-red-500">
                       {errorDetail}
                     </div>
                   )}
