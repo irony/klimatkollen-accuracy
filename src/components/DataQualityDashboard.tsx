@@ -7,6 +7,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieCha
 import { Company, CompanyComparison, QualityStats } from '@/types/data-quality';
 import { compareCompanies, generateQualityStats, ERROR_CATEGORIES } from '@/utils/data-quality-analyzer';
 import { useToast } from '@/hooks/use-toast';
+import CompanyErrorList from '@/components/CompanyErrorList';
+import CompanyDetailsSection from '@/components/CompanyDetailsSection';
 
 export default function DataQualityDashboard() {
   console.log('DataQualityDashboard: Component rendering...');
@@ -215,24 +217,25 @@ export default function DataQualityDashboard() {
                       {/* Error Statistics */}
                       <div className="bg-black-1 rounded-level-2 p-6">
                         <div className="space-y-2 mb-4">
-                          <p className="tracking-tight text-xl font-light">Felstatistik</p>
-                          <p className="tracking-tight text-sm font-light text-grey">Sammanfattning av alla felkategorier</p>
+                          <p className="tracking-tight text-xl font-light">Felstatistik med företagsdetaljer</p>
+                          <p className="tracking-tight text-sm font-light text-grey">Klicka på en felkategori för att se vilka företag som påverkas</p>
                         </div>
-                        <div className="grid grid-cols-1 @md:grid-cols-2 gap-2 max-h-300px md:max-h-500px overflow-y-auto w-full pr-2">
-                          {ERROR_CATEGORIES.map(category => (
-                            <div key={category.type} className="flex items-center gap-2 p-2 rounded-md hover:bg-black-2/60 transition-colors">
-                              <div 
-                                className="w-3 h-3 rounded flex-shrink-0" 
-                                style={{ backgroundColor: category.color }}
+                        <div className="space-y-3">
+                          {ERROR_CATEGORIES
+                            .filter(category => {
+                              const companiesWithError = comparisons.filter(comp => 
+                                comp.errors.some(error => error.type === category.type)
+                              );
+                              return companiesWithError.length > 0;
+                            })
+                            .map(category => (
+                              <CompanyErrorList
+                                key={category.type}
+                                errorCategory={category}
+                                companies={comparisons}
+                                environment="stage"
                               />
-                              <div className="min-w-0 flex-1">
-                                <div className="text-sm text-white">{category.description}</div>
-                                <div className="text-xs text-grey flex justify-between">
-                                  <span>{qualityStats.errorDistribution[category.type] || 0} fel</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
+                            ))}
                         </div>
                       </div>
                     </TabsContent>
@@ -263,6 +266,16 @@ export default function DataQualityDashboard() {
                   </Tabs>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Company Details Section */}
+          <div className="bg-black-2 rounded-level-1 py-4 md:py-8">
+            <div className="px-4 md:px-16">
+              <CompanyDetailsSection 
+                comparisons={comparisons}
+                environment="stage"
+              />
             </div>
           </div>
 
