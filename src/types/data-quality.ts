@@ -73,6 +73,15 @@ export interface CompanyComparison {
   companyName: string;
   errors: ErrorCategory[];
   correctnessPercentage: number;
+  comparisonDetails: {
+    scope1: { stage: number | null; prod: number | null };
+    scope2: { stage: number | null; prod: number | null };
+    scope3: { stage: number | null; prod: number | null };
+    currency: { stage: string | null; prod: string | null };
+    revenue: { stage: number | null; prod: number | null };
+    employees: { stage: number | null; prod: number | null };
+    year: { stage: number | null; prod: number | null };
+  };
 }
 
 export interface QualityStats {

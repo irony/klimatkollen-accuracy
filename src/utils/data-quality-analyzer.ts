@@ -249,6 +249,15 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     companyName: stageCompany.name,
     errors,
     correctnessPercentage: Math.round(correctFields / totalFields * 100),
+    comparisonDetails: {
+      scope1: { stage: stageScope1, prod: prodScope1 },
+      scope2: { stage: stageScope2, prod: prodScope2 },
+      scope3: { stage: stageScope3, prod: prodScope3 },
+      currency: { stage: stageCurrency, prod: prodCurrency },
+      revenue: { stage: stageRevenue, prod: prodRevenue },
+      employees: { stage: stageEmployees, prod: prodEmployees },
+      year: { stage: stageYear, prod: prodYear }
+    }
   };
 
   // Logga alla fel som hamnat i "annat" kategorin
