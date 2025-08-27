@@ -22,6 +22,7 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { type: 'year_mismatch', description: 'Fel rapportår', color: '#6c9105' }, // green-4
   { type: 'data_structure_error', description: 'Strukturfel i data', color: '#878787' }, // grey
   { type: 'other', description: 'Annat fel', color: '#878787' }, // grey
+  { type: 'perfect', description: 'Inga fel (100%)', color: '#4CAF50' }, // bright green
 ];
 
 function getLatestReportingPeriod(company: Company): ReportingPeriod | null {
@@ -273,9 +274,16 @@ export function generateQualityStats(comparisons: CompanyComparison[]): QualityS
   // Räkna fel per kategori
   const errorDistribution: Record<string, number> = {};
   ERROR_CATEGORIES.forEach(category => {
-    errorDistribution[category.type] = comparisons.filter(comp => 
-      comp.errors.some(error => error.type === category.type)
-    ).length;
+    if (category.type === 'perfect') {
+      // Speciell hantering för företag med 100% noggrannhet
+      errorDistribution[category.type] = comparisons.filter(comp => 
+        comp.correctnessPercentage === 100
+      ).length;
+    } else {
+      errorDistribution[category.type] = comparisons.filter(comp => 
+        comp.errors.some(error => error.type === category.type)
+      ).length;
+    }
   });
 
   // Skapa histogram över korrekthet med felkategorier (2% buckets)
@@ -294,9 +302,16 @@ export function generateQualityStats(comparisons: CompanyComparison[]): QualityS
 
     // Räkna fel per kategori för denna range
     ERROR_CATEGORIES.forEach(category => {
-      rangeData[category.type] = companiesInRange.filter(comp => 
-        comp.errors.some(error => error.type === category.type)
-      ).length;
+      if (category.type === 'perfect') {
+        // Speciell hantering för företag med 100% noggrannhet
+        rangeData[category.type] = companiesInRange.filter(comp => 
+          comp.correctnessPercentage === 100
+        ).length;
+      } else {
+        rangeData[category.type] = companiesInRange.filter(comp => 
+          comp.errors.some(error => error.type === category.type)
+        ).length;
+      }
     });
     
     histogram.push(rangeData);
