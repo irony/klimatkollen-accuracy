@@ -32,10 +32,9 @@ export default function DataQualityDashboard() {
       setLoading(true);
       
       console.log('DataQualityDashboard: Fetching from APIs via proxy...');
-      // Use proxy in development, direct URLs in production
-      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname.includes('sandbox');
-      const stageUrl = isDevelopment ? '/api/stage/api/companies' : 'https://stage-api.klimatkollen.se/api/companies';
-      const prodUrl = isDevelopment ? '/api/prod/api/companies' : 'https://api.klimatkollen.se/api/companies';
+      // Always use proxy to avoid CORS issues
+      const stageUrl = '/api/stage/api/companies';
+      const prodUrl = '/api/prod/api/companies';
 
       const [stageResponse, prodResponse] = await Promise.all([
         fetch(stageUrl),
