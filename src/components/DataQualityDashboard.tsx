@@ -31,12 +31,27 @@ export default function DataQualityDashboard() {
     try {
       setLoading(true);
       
-      console.log('DataQualityDashboard: Using mock data temporarily due to proxy issues...');
-      // Use mock data temporarily since proxy returns HTML instead of JSON
-      const { mockStageCompanies, mockProdCompanies } = await import('@/data/mock-companies');
-      
-      const stageCompanies: Company[] = mockStageCompanies;
-      const prodCompanies: Company[] = mockProdCompanies;
+      console.log('DataQualityDashboard: Fetching from APIs via Vite proxy...');
+      // Use Vite proxy to avoid CORS issues
+      const stageUrl = '/api/stage/api/companies';
+      const prodUrl = '/api/prod/api/companies';
+
+      const [stageResponse, prodResponse] = await Promise.all([
+        fetch(stageUrl),
+        fetch(prodUrl)
+      ]);
+
+      console.log('DataQualityDashboard: Response status', { 
+        stage: stageResponse.status, 
+        prod: prodResponse.status 
+      });
+
+      if (!stageResponse.ok || !prodResponse.ok) {
+        throw new Error(`Failed to fetch from APIs. Stage: ${stageResponse.status}, Prod: ${prodResponse.status}`);
+      }
+
+      const stageCompanies: Company[] = await stageResponse.json();
+      const prodCompanies: Company[] = await prodResponse.json();
       
       console.log(`DataQualityDashboard: Loaded ${stageCompanies.length} stage companies and ${prodCompanies.length} prod companies`);
 
