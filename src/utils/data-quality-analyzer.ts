@@ -137,6 +137,7 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
     }
 
     // Kolla om det finns konsistent enhetsproblem (alla ratios indikerar samma skalningsfaktor)
+    // Kräv minst 2 värdepar för att kunna detektera konsistent enhetsproblem
     const hasConsistentUnitError = ratios.length >= 2 && ratios.every(ratio => isUnitError(ratio));
 
     if (hasConsistentUnitError) {
@@ -152,11 +153,15 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
             totalPenalty += 1; // Saknar värde (1%)
           }
         } else if (prodScope1 !== null && prodScope1 !== undefined) {
+          // Båda värden finns - kolla om det är enhetsfel eller värdefel
           const ratio = Math.abs(stageScope1 / prodScope1);
           if (isUnitError(ratio)) {
-            // Detta är troligen ett enhetsfel snarare än ett dataf
-            errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
-            totalPenalty += 2; // Litet fel - tekniskt problem (2%)
+            // Detta är troligen ett enhetsfel snarare än ett datafel
+            // Lägg bara till om vi inte redan har ett enhetsfel
+            if (!errors.some(e => e.type === 'unit_error')) {
+              errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
+              totalPenalty += 2; // Litet fel - tekniskt problem (2%)
+            }
           } else {
             const percentDiff = Math.abs(stageScope1 - prodScope1) / prodScope1;
             if (percentDiff > 0.2) {
@@ -179,6 +184,7 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
             totalPenalty += 1; // Saknar värde (1%)
           }
         } else if (prodScope2 !== null && prodScope2 !== undefined) {
+          // Båda värden finns - kolla om det är enhetsfel eller värdefel
           const ratio = Math.abs(stageScope2 / prodScope2);
           if (isUnitError(ratio)) {
             // Detta är troligen ett enhetsfel snarare än ett datafel
@@ -208,6 +214,7 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
             totalPenalty += 1; // Saknar värde (1%)
           }
         } else if (prodScope3 !== null && prodScope3 !== undefined) {
+          // Båda värden finns - kolla om det är enhetsfel eller värdefel
           const ratio = Math.abs(stageScope3 / prodScope3);
           if (isUnitError(ratio)) {
             // Detta är troligen ett enhetsfel snarare än ett datafel
@@ -237,6 +244,7 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
         errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_revenue')!);
         totalPenalty += 1; // Saknar värde (1%)
       } else if (stageRevenue && prodRevenue) {
+        // Båda värden finns - kolla om det är enhetsfel eller värdefel
         const revenueRatio = Math.abs(stageRevenue / prodRevenue);
         if (isUnitError(revenueRatio)) {
           // Detta är troligen ett enhetsfel snarare än ett datafel
