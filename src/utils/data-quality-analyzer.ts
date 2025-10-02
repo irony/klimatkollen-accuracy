@@ -342,8 +342,9 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
             }
           }
           
-          // Om minst ett värde är identiskt på annat år, medan nuvarande år har fel, rapportera fel
-          if (identicalValues > 0 && totalComparisons > 0) {
+          // Kräv minst 2 identiska värden och minst 2 jämförelser för att flagga fel räkenskapsår
+          // Detta undviker falska positiva när bara ett enstaka värde råkar matcha
+          if (identicalValues >= 2 && totalComparisons >= 2) {
             errors.push(ERROR_CATEGORIES.find(e => e.type === 'wrong_fiscal_year')!);
             totalPenalty += 3; // Måttligt fel - rätt data men fel år (3%)
             
