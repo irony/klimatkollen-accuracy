@@ -18,6 +18,7 @@ export default function DataQualityDashboard() {
   const [comparisons, setComparisons] = useState<CompanyComparison[]>([]);
   const [qualityStats, setQualityStats] = useState<QualityStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const { toast } = useToast();
   const errorSectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
@@ -126,10 +127,13 @@ export default function DataQualityDashboard() {
   };
 
   const scrollToErrorCategory = (categoryType: string) => {
-    const element = errorSectionRefs.current[categoryType];
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    setExpandedCategory(categoryType);
+    setTimeout(() => {
+      const element = errorSectionRefs.current[categoryType];
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   };
 
   const errorChartData = ERROR_CATEGORIES.map(category => ({
@@ -223,6 +227,8 @@ export default function DataQualityDashboard() {
                                   stackId="errors"
                                   fill={category.color}
                                   name={category.description}
+                                  onClick={() => scrollToErrorCategory(category.type)}
+                                  className="cursor-pointer hover:opacity-80 transition-opacity"
                                 />
                               ))}
                             </BarChart>
@@ -254,16 +260,18 @@ export default function DataQualityDashboard() {
                               return companiesWithErrorB - companiesWithErrorA; // Sort descending (most errors first)
                             })
                              .map(category => (
-                               <div 
-                                 key={category.type}
-                                 ref={el => errorSectionRefs.current[category.type] = el}
-                               >
-                                 <CompanyErrorList
-                                   errorCategory={category}
-                                   companies={comparisons}
-                                   environment="stage"
-                                 />
-                               </div>
+                                <div 
+                                  key={category.type}
+                                  ref={el => errorSectionRefs.current[category.type] = el}
+                                >
+                                  <CompanyErrorList
+                                    errorCategory={category}
+                                    companies={comparisons}
+                                    environment="stage"
+                                    isExpanded={expandedCategory === category.type}
+                                    onToggle={() => setExpandedCategory(expandedCategory === category.type ? null : category.type)}
+                                  />
+                                </div>
                              ))}
                          </div>
                       </div>

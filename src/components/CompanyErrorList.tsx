@@ -8,10 +8,13 @@ interface CompanyErrorListProps {
   errorCategory: ErrorCategory;
   companies: CompanyComparison[];
   environment?: 'stage' | 'prod';
+  isExpanded?: boolean;
+  onToggle?: () => void;
 }
 
-export default function CompanyErrorList({ errorCategory, companies, environment = 'stage' }: CompanyErrorListProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export default function CompanyErrorList({ errorCategory, companies, environment = 'stage', isExpanded: externalIsExpanded, onToggle }: CompanyErrorListProps) {
+  const [internalIsExpanded, setInternalIsExpanded] = useState(false);
+  const isExpanded = externalIsExpanded !== undefined ? externalIsExpanded : internalIsExpanded;
   
   const companiesWithError = companies.filter(company => 
     company.errors.some(error => error.type === errorCategory.type)
@@ -25,7 +28,13 @@ export default function CompanyErrorList({ errorCategory, companies, environment
     <Card className="bg-black-1">
       <CardHeader 
         className="cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => {
+          if (onToggle) {
+            onToggle();
+          } else {
+            setInternalIsExpanded(!internalIsExpanded);
+          }
+        }}
       >
         <CardTitle className="flex items-center justify-between text-base">
           <div className="flex items-center gap-3">
