@@ -144,6 +144,20 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
       // Lägg till ett enda enhetsproblem istället för individuella fel
       errors.push(ERROR_CATEGORIES.find(e => e.type === 'unit_error')!);
       totalPenalty += 2; // Litet fel - tekniskt problem men rätt värden (2%)
+      
+      // Men kolla fortfarande om det saknas data för några scopes
+      if ((stageScope1 === null || stageScope1 === undefined) && (prodScope1 !== null && prodScope1 !== undefined)) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope1')!);
+        totalPenalty += 1;
+      }
+      if ((stageScope2 === null || stageScope2 === undefined) && (prodScope2 !== null && prodScope2 !== undefined)) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope2')!);
+        totalPenalty += 1;
+      }
+      if ((stageScope3 === null || stageScope3 === undefined) && (prodScope3 !== null && prodScope3 !== undefined)) {
+        errors.push(ERROR_CATEGORIES.find(e => e.type === 'missing_scope3')!);
+        totalPenalty += 1;
+      }
     } else {
       // Jämför scope 1
       if (stageScope1 !== prodScope1) {
