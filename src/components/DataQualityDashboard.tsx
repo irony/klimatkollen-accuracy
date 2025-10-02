@@ -169,7 +169,7 @@ export default function DataQualityDashboard() {
                       <p className="tracking-tight text-base md:mb-2 font-bold">Genomsnittlig noggrannhet</p>
                       <div className="flex items-baseline gap-4">
                         <p className="text-3xl md:text-4xl lg:text-6xl font-light tracking-tighter leading-none text-orange-2">
-                          {qualityStats.averageCorrectness}<span className="text-lg lg:text-2xl md:text-lg sm:text-sm ml-2 text-grey">%</span>
+                          {qualityStats.averageCorrectness.toFixed(1)}<span className="text-lg lg:text-2xl md:text-lg sm:text-sm ml-2 text-grey">%</span>
                         </p>
                       </div>
                     </div>
