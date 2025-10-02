@@ -109,8 +109,8 @@ export function compareCompanies(stageCompany: Company, prodCompany: Company): C
 
   // Helper function to check if ratio indicates unit error (different scales)
   function isUnitError(ratio: number): boolean {
-    // Check for various scale differences: 10x, 100x, 1000x, 10000x
-    const scalingFactors = [10, 100, 1000, 10000];
+    // Check for various scale differences: 10x, 100x, 1000x, 10000x, 100000x, 1000000x
+    const scalingFactors = [10, 100, 1000, 10000, 100000, 1000000];
     return scalingFactors.some(factor => 
       (ratio > factor * 0.9 && ratio < factor * 1.1) || 
       (ratio > (1/factor) * 0.9 && ratio < (1/factor) * 1.1)
