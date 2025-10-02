@@ -3,6 +3,7 @@ import { CompanyComparison, ErrorCategory } from '@/types/data-quality';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import YearErrorVisualization from './YearErrorVisualization';
 
 interface CompanyErrorListProps {
   errorCategory: ErrorCategory;
@@ -163,6 +164,7 @@ export default function CompanyErrorList({ errorCategory, companies, environment
 
               const relevantError = company.errors.find(error => error.type === errorCategory.type);
               const errorDetail = relevantError ? getErrorDetails(relevantError.type) : null;
+              const isYearError = errorCategory.type.includes('year');
 
               return (
                 <div key={company.companyId} className="p-3 bg-black-2 rounded-md">
@@ -191,11 +193,13 @@ export default function CompanyErrorList({ errorCategory, companies, environment
                       </a>
                     </Button>
                   </div>
-                  {errorDetail && (
+                  {isYearError ? (
+                    <YearErrorVisualization company={company} />
+                  ) : errorDetail ? (
                     <div className="bg-black-1 p-4 rounded-lg border">
                       {errorDetail}
                     </div>
-                  )}
+                  ) : null}
                 </div>
               );
             })}
